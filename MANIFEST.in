@@ -1,4 +1,4 @@
-include README.md LICENSE CITATION.cff ASSET_MANIFEST.tsv
+include README.md LICENSE NOTICE CITATION.cff ASSET_MANIFEST.tsv
 include models/*.json models/*.npz models/*.pt
 include src/compass_os/data/*.tsv src/compass_os/data/*.txt
 recursive-include docs *.md

@@ -493,6 +493,7 @@ Code: [`LICENSE`](LICENSE) (MIT).
 **COMPASS-OS incorporates vendored components from COMPASS under its upstream license.**
 The upstream COMPASS source is redistributed unmodified in `third_party/compass/` together
 with its MIT licence text at [`third_party/COMPASS_LICENSE`](third_party/COMPASS_LICENSE);
+the same attribution is restated in [`NOTICE`](NOTICE);
 the pretrained checkpoint (`models/pretrainer.pt`) is likewise distributed under that
 upstream licence. Those components are **not** original work of the COMPASS-OS authors —
 please cite the upstream COMPASS publication as well.

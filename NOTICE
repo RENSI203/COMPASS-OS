@@ -1,0 +1,17 @@
+COMPASS-OS
+==========
+
+Third-party notice
+------------------
+
+This package vendors the upstream COMPASS source code under `third_party/compass/`
+and ships a COMPASS pretrained checkpoint (`models/pretrainer.pt`). Both are
+distributed under the MIT License, Copyright (c) 2023 Artificial Intelligence
+for Medicine and Science @ Harvard.
+
+See `third_party/COMPASS_LICENSE` for the verbatim upstream license text.
+
+The MIT License text in `LICENSE` applies to COMPASS-OS itself. The vendored
+upstream components listed above remain under their own upstream MIT license and
+are not original work of the COMPASS-OS authors; please cite the upstream COMPASS
+publication as well.
