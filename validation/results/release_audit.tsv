@@ -1,0 +1,75 @@
+check	path	detail	status
+artifact	src/compass_os/__pycache__/__init__.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	src/compass_os/__pycache__/_paths.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	src/compass_os/__pycache__/analysis.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	src/compass_os/__pycache__/api.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	src/compass_os/__pycache__/exceptions.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	src/compass_os/__pycache__/plotting.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	src/compass_os/__pycache__/preprocessing.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	src/compass_os/__pycache__/qc.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	src/compass_os/__pycache__/representation.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	src/compass_os/__pycache__/survival.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	tests/__pycache__/_util.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	tests/__pycache__/test_analysis.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	tests/__pycache__/test_api.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	tests/__pycache__/test_assets.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	tests/__pycache__/test_duplicate_genes.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	tests/__pycache__/test_qc_tiers.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	tests/__pycache__/test_reproducibility.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/__pycache__/__init__.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/__pycache__/main.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/augmentor/__pycache__/__init__.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/augmentor/__pycache__/aug.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/dataloader/__pycache__/__init__.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/dataloader/__pycache__/data.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/decoder/__pycache__/__init__.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/decoder/__pycache__/decoder.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/embedder/__pycache__/__init__.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/embedder/__pycache__/embedder.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/encoder/__pycache__/__init__.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/encoder/__pycache__/encoder.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/encoder/layer/__pycache__/FlashMultiHead.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/encoder/layer/__pycache__/__init__.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/encoder/layer/__pycache__/cosformer.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/encoder/layer/__pycache__/flashformer.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/encoder/layer/__pycache__/flowformer.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/encoder/layer/__pycache__/norm.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/encoder/layer/__pycache__/performer.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/encoder/layer/__pycache__/transformer.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/model/__pycache__/__init__.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/model/__pycache__/adapt.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/model/__pycache__/loss.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/model/__pycache__/model.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/model/__pycache__/saver.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/model/__pycache__/scaler.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/model/__pycache__/train.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/model/__pycache__/tune.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/projector/__pycache__/__init__.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/projector/__pycache__/cellpathwayaggregator.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/projector/__pycache__/genesetaggregator.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/projector/__pycache__/genesetscorer.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/projector/__pycache__/projector.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/tokenizer/__pycache__/__init__.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/utils/__pycache__/__init__.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/utils/__pycache__/crmap.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/utils/__pycache__/loader.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/utils/__pycache__/plotter.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/utils/__pycache__/sankey.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	third_party/compass/utils/__pycache__/scorer.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	validation/output/smoke_run/fig_stress_curves.png	本地输入/运行产物（.gitignore 已覆盖）	WARN
+artifact	validation/output/smoke_run/fig_stress_uno_c.png	本地输入/运行产物（.gitignore 已覆盖）	WARN
+artifact	validation/output/smoke_run/stress_curves.tsv	本地输入/运行产物（.gitignore 已覆盖）	WARN
+artifact	validation/output/smoke_run/stress_raw.tsv	本地输入/运行产物（.gitignore 已覆盖）	WARN
+artifact	validation/output/smoke_run/stress_report.md	本地输入/运行产物（.gitignore 已覆盖）	WARN
+asset-hash	ASSET_MANIFEST.tsv	校验：13 项 ⇒ 异常 0	PASS
+required-file	README.md	存在	PASS
+required-file	LICENSE	存在	PASS
+required-file	CITATION.cff	存在	PASS
+required-file	pyproject.toml	存在	PASS
+required-file	MANIFEST.in	存在	PASS
+required-file	ASSET_MANIFEST.tsv	存在	PASS
+required-file	models/model_manifest.json	存在	PASS
+required-file	models/pretrainer.pt	存在	PASS
+required-file	src/compass_os/__init__.py	存在	PASS
+required-file	tests/run_tests.py	存在	PASS
+required-file	third_party/COMPASS_LICENSE	存在	PASS

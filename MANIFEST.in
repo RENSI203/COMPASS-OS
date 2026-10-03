@@ -1,0 +1,7 @@
+include README.md LICENSE CITATION.cff ASSET_MANIFEST.tsv
+include models/*.json models/*.npz models/*.pt
+include src/compass_os/data/*.tsv src/compass_os/data/*.txt
+recursive-include docs *.md
+recursive-include tests *.py
+recursive-include tests/fixtures *.tsv *.tsv.gz *.json *.md
+recursive-include examples *.py

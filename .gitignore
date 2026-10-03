@@ -1,0 +1,29 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# 运行产物（可重新生成）
+examples/output/
+validation/output/
+validation/inputs/
+
+# 大型/原始逐次重复结果：保留在本地，不进入 Git（可由 validation/ 下脚本重建）
+#   raw*.tsv          —— 逐 (队列 × 条件 × 重复) 的原始指标（约 2.9 MB）
+#   platform_masks.json —— 38 队列的真实平台缺失基因清单（约 5.4 MB）
+#   发布口径的汇总表与图件仍被跟踪（validation/results/*.tsv, figures/）
+validation/results/raw*.tsv
+validation/results/platform_masks.json
+validation/results/_tmp_*
+
+# 本地环境
+.venv/
+venv/
+.env
+
+# 编辑器/系统
+.DS_Store
+*.swp

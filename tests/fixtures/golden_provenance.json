@@ -1,0 +1,46 @@
+{
+  "n_samples": 12,
+  "samples": [
+    "TCGA-19-1787",
+    "TCGA-S9-A7J2",
+    "TCGA-G3-A3CH",
+    "TCGA-B5-A5OE",
+    "TCGA-B2-5641",
+    "TCGA-C8-A1HL",
+    "TCGA-EW-A2FS",
+    "TCGA-IR-A3L7",
+    "TCGA-05-4420",
+    "TCGA-91-6840",
+    "TCGA-R6-A8WC",
+    "TCGA-B6-A402"
+  ],
+  "provenance": {
+    "expression": "data_tcga/processed/01_expression/expression_tcga_tpm.tsv.gz",
+    "concepts_43": "data_tcga/processed/04_embedding/embeddings_43.tsv.gz (真实癌种码)",
+    "genesets_132": "生产调用（predict + enable_geneset_capture，真实癌种码）",
+    "risk": "scripts/12_validate_external.py::_build_features + lock(β/scaler)",
+    "genesets_132_placeholder_code5": "scripts_dev/analysis_out_concepts/tcga_genesets.tsv.gz（占位码 5，另测）"
+  },
+  "files": {
+    "golden_clinical.tsv": {
+      "size": 301,
+      "sha256": "cea95e668a57e3b000315a07dd6ec6b75dab1b26d970855a066e384ddc040e2b"
+    },
+    "golden_expected.tsv.gz": {
+      "size": 34510,
+      "sha256": "237edecab447eb21a95aacbe5d06abdba10c7b5bb1bb1a05ebdd105577cda2d9"
+    },
+    "golden_expression.tsv.gz": {
+      "size": 683607,
+      "sha256": "6d568e5d9b690c1a53e4ea96b2aed9a55a77f0fdbf54e6cbd897e3f0b84157b6"
+    },
+    "golden_labels.tsv": {
+      "size": 380,
+      "sha256": "e44ab7952ece8f6e02728c3729c9022d0fe37ff5333688810437dc6d376050a3"
+    },
+    "golden_provenance.json": {
+      "size": 1497,
+      "sha256": "b53806bf162cc7f7b1ae0cac7f6a5bb117d9ec303bc799ea91635c84a7122c85"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+mask_type	coverage_axis	coverage	mask_fraction_of_pool	gene_coverage	risk_spearman	group_agreement	recommended_condition	warning_condition	n_cohorts
+global	global gene coverage	0.949974	0.05	0.949974	0.9863	0.9917	True	True	12
+global	global gene coverage	0.900013	0.1	0.900013	0.9593	0.9917	True	True	12
+global	global gene coverage	0.800026	0.2	0.800026	0.923	0.9833	False	True	12
+global	global gene coverage	0.699974	0.3	0.699974	0.8449	0.9917	False	True	12
+global	global gene coverage	0.599987	0.4	0.599987	0.7928	0.9833	False	False	12
+global	global gene coverage	0.5	0.5	0.5	0.7413	0.95	False	False	12
+signature	signature (Gsig) coverage	0.99	0.01	0.999426	0.9987	1.0	True	True	12
+signature	signature (Gsig) coverage	0.98	0.02	0.998851	0.9961	1.0	True	True	12
+signature	signature (Gsig) coverage	0.95	0.05	0.997065	0.9827	0.9917	True	True	12
+signature	signature (Gsig) coverage	0.9	0.1	0.99413	0.9643	0.9917	True	True	12
+signature	signature (Gsig) coverage	0.8	0.2	0.988323	0.924	0.9833	False	True	12
+signature	signature (Gsig) coverage	0.7	0.3	0.982453	0.849	0.9833	False	True	12
+non_sig	non-signature gene coverage	0.95	0.05	0.95291	1.0	1.0	True	True	12
+non_sig	non-signature gene coverage	0.9	0.1	0.905819	1.0	1.0	True	True	12
+non_sig	non-signature gene coverage	0.8	0.2	0.811702	0.9999	1.0	True	True	12
+non_sig	non-signature gene coverage	0.7	0.3	0.717522	0.9999	1.0	True	True	12
+non_sig	non-signature gene coverage	0.6	0.4	0.623405	0.9998	1.0	True	True	12
+non_sig	non-signature gene coverage	0.5	0.5	0.529224	0.9998	1.0	True	True	12

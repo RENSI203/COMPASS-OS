@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "COMPASS-OS"
+abstract: >-
+  COMPASS-OS is a frozen-asset inference package for pan-cancer overall-survival
+  risk prediction from bulk transcriptomic expression. From one expression
+  matrix it returns a relative prognostic risk score with cohort
+  stratification, a 43-concept COMPASS representation, a 132-gene-signature
+  representation, and gene/signature/concept coverage QC. It provides a
+  one-click analysis entry point and a controlled advanced API; no model
+  training, re-fitting or tuning happens at prediction time.
+type: software
+version: 1.0.0
+date-released: "2026-10-03"
+license: MIT
+repository-code: "https://github.com/<GITHUB_OWNER>/COMPASS-OS"
+authors:
+  - name: "<COPYRIGHT_HOLDER>"
+keywords:
+  - pan-cancer
+  - overall survival
+  - prognostic risk
+  - COMPASS
+  - transcriptomics
+  - gene signatures
+  - bioinformatics
+references:
+  - type: article
+    title: "Generalizable AI predicts immunotherapy outcomes across cancers and treatments"
+    journal: "Nature Medicine"
+    year: 2026
+    notes: >-
+      Upstream COMPASS model. COMPASS-OS incorporates vendored components from
+      COMPASS under its upstream MIT license; see third_party/COMPASS_LICENSE.

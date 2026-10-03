@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "validation_date": "2026-10-03",
+  "validation_dataset_count": 12,
+  "validation_sample_count": 720,
+  "metrics_used": [
+    "risk_spearman",
+    "group_agreement",
+    "risk_pearson",
+    "concept_sample_r",
+    "signature_sample_r",
+    "delta_uno"
+  ],
+  "cutoffs_used": {
+    "recommended": {
+      "risk_spearman": 0.95,
+      "group_agreement": 0.9
+    },
+    "warning": {
+      "risk_spearman": 0.8,
+      "group_agreement": 0.7
+    }
+  },
+  "threshold_kind": "empirically_calibrated_descriptive_tiers",
+  "status": "complete",
+  "note": "阈值由 missing-gene stress test 的实测曲线确定，属**工程 QC 阈值**，不是生物学边界；曲线若无明显断点，则它们是描述性分层而非‘安全线’。",
+  "recommended_global_coverage": 0.9,
+  "warning_global_coverage": 0.7,
+  "recommended_Gsig_coverage": 0.9,
+  "warning_Gsig_coverage": 0.7,
+  "signature_coverage_warning_threshold": null,
+  "notes_missing": [
+    "signature_coverage_warning_threshold 未校准且**不予发布**：可复核的覆盖度–误差表要求 (signature × coverage) 逐条件累积，当前保留的结果表中 coverage_mean 对 132 个 signature 恒为 1.0（无覆盖度变异）⇒ 无法从中估计阈值。per-signature coverage 继续以连续值报告（signature_gene_coverage，n×132）；**不使用**任何不可复现的数值阈值。"
+  ],
+  "curve_cohorts": 12,
+  "empirical_cohorts": 38,
+  "signature_axis_points": 6
+}
