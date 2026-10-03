@@ -35,3 +35,8 @@ delta_uno_max_abs_median	0.0188746792207714	Uno C	global masking, all levels	val
 gsig_genes	916	genes	signature gene set	src/compass_os/data/concept_gene_sets.tsv	unique symbols	1.0.0	1.0.0	
 nonsig_genes	14756	genes	G_all - G_sig	validation/run_missing_gene_validation.py	computed at runtime	1.0.0	1.0.0	15,672 - 916
 vocabulary_genes	15672	genes	COMPASS vocabulary	src/compass_os/data/gene_vocabulary.txt	lines	1.0.0	1.0.0	zero duplicate symbols
+software_version	1.0.0	version	software release	paper_assets/SOFTWARE_PROVENANCE.tsv	release:* rows	1.0.0	1.0.0	COMPASS-OS
+software_repository_url	https://github.com/RENSI203/COMPASS-OS	URL	software release	paper_assets/SOFTWARE_PROVENANCE.tsv	release:* rows	1.0.0	1.0.0	Software Availability
+software_release_tag	v1.0.0	tag	software release	paper_assets/SOFTWARE_PROVENANCE.tsv	release:* rows	1.0.0	1.0.0	annotated, immutable
+software_release_commit	3f2aeadf18770e4f88faaa5991b654763d2f3f6f	git SHA	software release	paper_assets/SOFTWARE_PROVENANCE.tsv	release:* rows	1.0.0	1.0.0	tag target
+software_release_date	2026-10-03	date	software release	paper_assets/SOFTWARE_PROVENANCE.tsv	release:* rows	1.0.0	1.0.0	tag push date
