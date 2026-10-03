@@ -13,9 +13,12 @@ type: software
 version: 1.0.0
 date-released: "2026-10-03"
 license: MIT
-repository-code: "https://github.com/<GITHUB_OWNER>/COMPASS-OS"
+repository-code: "https://github.com/RENSI203/COMPASS-OS"
 authors:
-  - name: "<COPYRIGHT_HOLDER>"
+  - family-names: "Ren"
+    given-names: "Jiahao"
+  - family-names: "Xin"
+    given-names: "Junyi"
 keywords:
   - pan-cancer
   - overall survival

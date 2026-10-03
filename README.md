@@ -4,7 +4,7 @@
 framework.**
 
 * **Version:** 1.0.0 · **Python package:** `compass_os` · **License:** MIT
-* **Repository:** `https://github.com/<GITHUB_OWNER>/COMPASS-OS`
+* **Repository:** `https://github.com/RENSI203/COMPASS-OS`
 
 Built on bulk transcriptomic expression + cancer type (+ optional clinical variables), it
 returns:
@@ -368,4 +368,5 @@ the pretrained checkpoint (`models/pretrainer.pt`) is likewise distributed under
 upstream licence. Those components are **not** original work of the COMPASS-OS authors —
 please cite the upstream COMPASS publication as well.
 
-> Copyright holder: `<COPYRIGHT_HOLDER>` (to be confirmed before release).
+> Copyright (c) 2026 RENSI203 (MIT). Software citation authors: Jiahao Ren, Junyi Xin
+> (see [`CITATION.cff`](CITATION.cff)).

@@ -31,9 +31,9 @@ upstream = ["immuno-compass==2.5.3"]   # 若不使用 vendored 副本
 test = ["pytest>=7"]
 
 [project.urls]
-Documentation = "https://github.com/<GITHUB_OWNER>/COMPASS-OS#readme"
-Source = "https://github.com/<GITHUB_OWNER>/COMPASS-OS"
-Issues = "https://github.com/<GITHUB_OWNER>/COMPASS-OS/issues"
+Documentation = "https://github.com/RENSI203/COMPASS-OS#readme"
+Source = "https://github.com/RENSI203/COMPASS-OS"
+Issues = "https://github.com/RENSI203/COMPASS-OS/issues"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
