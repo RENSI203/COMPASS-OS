@@ -41,11 +41,36 @@ from ._paths import ensure_compass
 
 @functools.lru_cache(maxsize=2)
 def load_model(device: str = "cpu"):
-    """加载冻结的 COMPASS checkpoint（带缓存；进程内只加载一次）。"""
+    """加载冻结的 COMPASS checkpoint（带缓存；进程内只加载一次）。
+
+    ⚠ v1.0.1 起**不再调用上游 ``compass.loadcompass``**。该函数末尾有：
+
+    .. code-block:: python
+
+        if file.startswith(tempfile.gettempdir()):
+            os.remove(file)
+
+    原意是清理"从 URL 下载得到的临时文件"，但判据是**路径前缀**：凡是位于系统临时目录
+    （如 ``/tmp``）下的模型文件，加载后都会被 ``os.remove`` **静默删除**。因此任何装在
+    ``/tmp`` 下的 Python 环境（容器、CI、``pip install --target /tmp/...`` 等）在第一次
+    预测后就会丢失 checkpoint，后续调用全部失败。
+
+    本函数用 ``torch.load`` 直接加载本地冻结资产（与上游同一个调用），并复刻上游那两处
+    非破坏性调整，从而在**不修改 vendored 上游源码**的前提下消除该副作用。
+    数值行为与上游完全一致（golden 复现验证）。
+    """
     ensure_compass()
-    from compass import loadcompass
+    import torch
     from ._paths import asset
-    return loadcompass(str(asset("models/pretrainer.pt")), map_location=device)
+
+    path = asset("models/pretrainer.pt")
+    model = torch.load(str(path), weights_only=False, map_location=device)
+    # —— 复刻上游 loadcompass 的非破坏性后处理 ——
+    if hasattr(model, "with_wandb") and model.with_wandb:
+        model.wandb._settings = ""
+    if device == "cpu":
+        model.device = "cpu"
+    return model
 
 
 def checkpoint_feature_names() -> tuple:

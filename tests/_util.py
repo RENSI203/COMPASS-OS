@@ -25,6 +25,17 @@ TOL_GOLDEN = 1e-5
 TOL_ZERO_EQ = 1e-6
 
 
+def repo_root() -> Path:
+    """仓库根（测试中用于读取 README / docs 等非资产文件）。"""
+    return REPO
+
+
+def assets_root() -> Path:
+    """随包 runtime 资产根（v1.0.1 起为 ``src/compass_os/assets``）。"""
+    from compass_os._paths import assets_root as _ar
+    return _ar()
+
+
 def fixtures_available() -> bool:
     return (FIXTURES / "golden_expected.tsv.gz").is_file()
 

@@ -64,12 +64,13 @@ def test_single_sample_has_no_stratification():
 
 
 def test_cohort_risk_rank_and_group():
-    """队列：给出秩与按**冻结切点**的 high/low。"""
+    """队列 ≥ min_cohort_for_stratification：给出秩与按**冻结切点**的 high/low。"""
     import compass_os
     from compass_os.survival import median_cutoff
     fx = load_fixtures()
     res = compass_os.predict(fx["expression"], fx["labels"]["cancer_type"],
-                             clinical=fx["clinical"], model="M2")
+                             clinical=fx["clinical"], model="M2",
+                             min_cohort_for_stratification=2)
     assert res.risk_rank.shape == res.risk.shape
     cut = median_cutoff("M2")
     expect = np.where(res.risk["M2"].to_numpy() >= cut, "high", "low")
@@ -140,13 +141,14 @@ def test_clinical_imputation_reported():
 
 
 def test_check_robustness_contract():
-    """check_robustness 返回连续指标，且 robustness_flag 未校准。"""
+    """check_robustness 返回连续指标；无二元 pass/fail（v1.0.1 起为 continuous_only）。"""
     import compass_os
     fx = load_fixtures()
     r = compass_os.check_robustness(fx["expression"].iloc[:6],
                                     fx["labels"]["cancer_type"].iloc[:6],
                                     fx["clinical"].iloc[:6], model="M2")
-    assert r.robustness_flag == "not_calibrated"
+    assert r.robustness_flag == "continuous_only"
+    assert "Coverage QC tiers are calibrated" in r.note or "校准" in r.note
     assert set(r.risk) == {"reference", "zero"}
     assert len(r.risk_difference) == 6
     assert "reference_vs_zero" in r.concept_correlation

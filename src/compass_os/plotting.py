@@ -112,7 +112,7 @@ def risk_distribution(risk: Sequence[float], *, cutoff: float | None = None, ax=
         ax.axvline(cutoff, color="#d62728", ls="--", lw=1.2,
                    label=f"frozen cutoff = {cutoff:.3g}")
         ax.legend(fontsize=7, frameon=False)
-    ax.set_xlabel("linear predictor (relative risk)", fontsize=8)
+    ax.set_xlabel("prognostic risk score (Cox linear predictor)", fontsize=8)
     ax.set_ylabel("samples", fontsize=8)
     ax.set_title(title, fontsize=8)
     ax.tick_params(labelsize=8)

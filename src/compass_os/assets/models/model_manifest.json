@@ -4,32 +4,32 @@
   "models": {
     "M0": {
       "label": "clinical baseline",
-      "lock": "models/locked_M0.json",
+      "lock": "src/compass_os/assets/models/locked_M0.json",
       "features": "CancerType(one-hot) + Age + Sex + Stage",
       "description": "仅临床变量的基线模型。"
     },
     "M1": {
       "label": "COMPASS concept model",
-      "lock": "models/locked_M1.json",
+      "lock": "src/compass_os/assets/models/locked_M1.json",
       "features": "43 COMPASS concepts",
       "description": "仅 COMPASS 43 概念，无临床变量。"
     },
     "M2": {
       "label": "COMPASS concepts + clinical (primary)",
-      "lock": "models/locked_M2.json",
+      "lock": "src/compass_os/assets/models/locked_M2.json",
       "features": "CancerType(one-hot) + Age + Sex + Stage + 43 COMPASS concepts",
       "description": "当前冻结的主模型（frozen primary model）。"
     },
     "M3": {
       "label": "COMPASS concepts + clinical + expression PCs",
-      "lock": "models/locked_M3.json",
-      "pca": "models/locked_pca_M3.npz",
+      "lock": "src/compass_os/assets/models/locked_M3.json",
+      "pca": "src/compass_os/assets/models/locked_pca_M3.npz",
       "features": "M2 + PC1-PC10（锁定 PCA，作用于 log2(TPM+1)）",
       "description": "表达主成分增强模型，作为附加模型提供。"
     }
   },
-  "checkpoint": "models/pretrainer.pt",
-  "reference_quantiles": "models/reference_quantiles.json",
+  "checkpoint": "src/compass_os/assets/models/pretrainer.pt",
+  "reference_quantiles": "src/compass_os/assets/models/reference_quantiles.json",
   "missing_gene": {
     "strategies": [
       "reference",

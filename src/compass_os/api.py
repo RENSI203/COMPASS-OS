@@ -98,9 +98,12 @@ class RobustnessResult:
     concept_correlation: dict
     signature_correlation: dict
     concept_input_coverage: dict
-    robustness_flag: str | None = "not_calibrated"
-    note: str = ("缺失基因稳健性阈值尚未校准：robustness_flag 固定为 'not_calibrated'，"
-                 "请使用连续指标；阈值将在 missing-gene stress test 完成后写入 qc_config.json。")
+    robustness_flag: str | None = "continuous_only"
+    note: str = (
+        "不存在单一的二元 pass/fail 判定：覆盖度 QC 分级已按冻结阈值校准（recommended 0.90 / "
+        "warning 0.70，global 与 signature 双轴，overall = worse(global, Gsig)），"
+        "而 reference-versus-zero 稳健性比较在 v1.x 中**只提供连续指标**。"
+        "请把连续的风险/表征稳定性指标与已校准的覆盖度分级一起解读。")
 
     def to_dict(self) -> dict:
         return {"sample_ids": self.sample_ids, "gene_coverage": self.gene_coverage,
@@ -202,7 +205,7 @@ def predict(expression: pd.DataFrame, cancer_type: Iterable,
             missing_gene_strategy: str = "reference", input_scale: str = "tpm",
             batch_size: int = 16, device: str = "cpu",
             min_cohort_for_stratification: int = 30) -> PredictionResult:
-    """预测 M0–M3（以及 ``default``）的相对风险 + 132/43 表示 + QC。
+    """预测 M0–M3（以及 ``default``）的**预后风险分数**（Cox 线性预测子）+ 132/43 表征 + QC。
 
     参数
     ----
@@ -217,7 +220,9 @@ def predict(expression: pd.DataFrame, cancer_type: Iterable,
     返回
     ----
     :class:`PredictionResult`
-        ``risk`` / ``linear_predictor``（samples × 模型）、``risk_rank``、``risk_group``、
+        ``risk`` / ``linear_predictor``（samples × 模型；**Cox 线性预测子 η = Xβ**，
+        数值越大表示模型估计的风险越高；``exp(η)`` 才是相对风险比 relative hazard）、
+        ``risk_rank``、``risk_group``、
         ``signature_scores``、``concept_scores``、``qc``。
 
     备注
@@ -254,18 +259,26 @@ def predict(expression: pd.DataFrame, cancer_type: Iterable,
 
     # 显式请求 "default" 时额外给 default 列；默认行为已包含 want_default
     n = len(sample_ids)
-    rank = group = None
+    # v1.0.1 fix：风险**排序**与 **high/low 分层**明确分开，且与文档一致：
+    #   n == 1                    → risk_rank = None, risk_group = None
+    #   2 <= n <  min_cohort      → risk_rank 可用,  risk_group = None
+    #   n >= min_cohort           → risk_rank 可用,  risk_group = 冻结切点 high/low
+    rank = None
     if n >= 2:
         rank = risk_df.rank(method="average").astype(float)
+    group = None
+    if n >= min_cohort_for_stratification:
         cut = _surv.median_cutoff(want_default)
         group = pd.DataFrame(
             {mk: np.where(risk_df[mk].to_numpy() >= cut, "high", "low") for mk in risk_df.columns},
             index=sample_ids)
-        if n < min_cohort_for_stratification:
-            warnings.append(
-                f"Cohort has {n} samples (< {min_cohort_for_stratification}): risk_group is "
-                "still assigned from the frozen cutoff, but within-cohort comparisons are "
-                "weak; single samples are never stratified")
+    elif n >= 2:
+        warnings.append(
+            f"Cohort has {n} samples (< min_cohort_for_stratification="
+            f"{min_cohort_for_stratification}): risk_rank is provided, but risk_group is not "
+            "assigned (within-cohort high/low comparison would be unreliable at this size)")
+    else:
+        warnings.append("Single sample: neither risk_rank nor risk_group is defined")
 
     return PredictionResult(sample_ids=sample_ids, cancer_type=ct.tolist(),
                             default_model=want_default, risk=risk_df,
@@ -282,7 +295,7 @@ def check_robustness(expression: pd.DataFrame, cancer_type: Iterable,
     """对同一输入分别用多种缺失基因策略预测，报告差异（**连续指标，无阈值判定**）。
 
     返回 ``risk_reference`` / ``risk_zero`` 形式的逐策略风险、``risk_difference``、
-    concept/signature 的逐样本相关，以及 ``robustness_flag="not_calibrated"``。
+    concept/signature 的逐样本相关，以及 ``robustness_flag="continuous_only"``。
     """
     strategies = tuple(strategies)
     bad = [s for s in strategies if s not in STRATEGIES]

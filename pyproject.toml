@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "compass-os"
-version = "1.0.0"
+version = "1.0.1"
 description = "COMPASS-based pan-cancer overall-survival risk prediction with mechanism-oriented representation readouts (132 gene signatures, 43 concepts)"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -39,11 +39,32 @@ Issues = "https://github.com/RENSI203/COMPASS-OS/issues"
 package-dir = { "" = "src" }
 include-package-data = true
 
+# assets/ 是**数据目录**而非 Python 包：其中的 vendored COMPASS 必须按 `compass`
+# 顶层名导入，因此禁止 setuptools 把 compass_os.assets.* 当作子包发现。
 [tool.setuptools.packages.find]
 where = ["src"]
+namespaces = false
+exclude = ["compass_os.assets*"]
 
 [tool.setuptools.package-data]
-compass_os = ["data/*.tsv", "data/*.txt"]
+compass_os = [
+  "data/*.tsv",
+  "data/*.txt",
+  # ---- runtime 资产（v1.0.1 起随 wheel 分发）----
+  "assets/models/*.json",
+  "assets/models/*.npz",
+  "assets/models/*.pt",
+  "assets/third_party/COMPASS_LICENSE",
+  "assets/third_party/compass/**/*.py",
+  "assets/third_party/compass/**/*.json",
+  "assets/third_party/compass/**/*.csv",
+  "assets/third_party/compass/**/*.pt",
+  "assets/third_party/compass/**/*.pth",
+  "assets/third_party/compass/**/*.txt",
+  "assets/third_party/compass/**/*.tsv",
+  "assets/third_party/compass/**/*.yaml",
+  "assets/third_party/compass/**/*.yml",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

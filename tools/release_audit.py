@@ -99,10 +99,16 @@ def main(argv=None) -> int:
                  "status": "PASS" if r.returncode == 0 else "FAIL"})
 
     # 关键文件
-    need = ["README.md", "LICENSE", "CITATION.cff", "pyproject.toml", "MANIFEST.in",
-            "ASSET_MANIFEST.tsv", "models/model_manifest.json", "models/pretrainer.pt",
+    need = ["README.md", "LICENSE", "NOTICE", "CITATION.cff", "pyproject.toml",
+            "MANIFEST.in", "ASSET_MANIFEST.tsv",
+            "src/compass_os/assets/models/model_manifest.json",
+            "src/compass_os/assets/models/pretrainer.pt",
             "src/compass_os/__init__.py", "tests/run_tests.py",
-            "third_party/COMPASS_LICENSE"]
+            "src/compass_os/assets/third_party/COMPASS_LICENSE",
+            # v1.0.1：资产必须随包（不得留在仓库根）
+            "src/compass_os/assets/models/qc_config.json",
+            "src/compass_os/assets/third_party/compass/__init__.py",
+            "RELEASE_NOTES_v1.0.1.md"]
     for n in need:
         ok = (REPO / n).exists()
         rows.append({"check": "required-file", "path": n,

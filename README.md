@@ -5,7 +5,7 @@ framework.**
 
 **泛癌生存预测与机制导向转录组表征框架。**
 
-* **Version / 版本:** 1.0.0 · **Python package:** `compass_os` · **License:** MIT
+* **Version / 版本:** 1.0.1 · **Python package:** `compass_os` · **License:** MIT
 * **Repository:** `https://github.com/RENSI203/COMPASS-OS`
 
 > **Language / 语言**：Each section is written in English first (canonical release text for
@@ -65,9 +65,14 @@ Three kinds of output, deliberately kept separate:
 ## 2. Quick start ｜ 快速开始
 
 ```bash
-pip install -e .
-export COMPASS_OS_ROOT=$(pwd)     # only if models/ is not found automatically
+git clone https://github.com/RENSI203/COMPASS-OS.git
+cd COMPASS-OS
+pip install .
 ```
+
+Model assets and the vendored COMPASS package ship **inside the Python package**
+(`compass_os/assets/`), so no extra environment variable is needed. `COMPASS_OS_ROOT` is a
+developer override only (see [Installation](#10-installation--安装)).
 
 ```python
 import compass_os
@@ -83,27 +88,26 @@ result.summary()
 result.save_report("compass_results/")
 ```
 
-That is the whole workflow. Real output on a small cohort:
+That is the whole workflow. Real output of
+[`examples/quick_start.py`](examples/quick_start.py) (5 LUAD samples):
 
 ```text
 COMPASS-OS analysis
 ────────────────────────────────────────────────────────────────
-Samples                         48
-Cancer type                     9 cancer types (BRCA, CESC, ESCA, GBM, …)
+Samples                         5
+Cancer type                     LUAD
 Model                           Default prognostic model (M2)
 
 INPUT QUALITY
 Gene coverage                   100.0% (15672/15672 genes)
-Signature-related coverage      100.0% (median across 132 sets)
+Signature-related coverage      100.0% (of the 916 signature genes)
 Concept input coverage          100.0% (median across 43 concepts)
-QC                              Recommended range (≥ 90% of required genes observed)
+QC                              Recommended range (global 100.0%, signature genes 100.0%;
+                                thresholds global ≥ 90%, signature ≥ 90%)
 
 SURVIVAL
-Risk estimates                  Available (relative risk, linear predictor)
-Risk stratification             Available (frozen cutoff)
-High risk                       28
-Low risk                        20
-Log-rank p (risk groups)        0.0353
+Risk estimates                  Available (prognostic risk score; Cox linear predictor)
+Risk stratification             Not available (cohort of 5 is too small)
 
 BIOLOGICAL REPRESENTATIONS
 43 concept profiles             Generated
@@ -113,7 +117,18 @@ Interpretation                  hypothesis-generating features
 ROBUSTNESS
 Missing-gene strategy           Reference imputation (frozen median)
 Robustness check                Not required (coverage in recommended range)
+
+CLINICAL VARIABLES IMPUTED (frozen training reference values)
+  Age: 1/5 samples → 60.0
+  Sex: 1/5 samples → 0.0
+  Stage: 3/5 samples → 2.0
 ```
+
+The example is a **single-cancer-type** call (`cancer_type="LUAD"`), and the output above is
+exactly what that call prints. To analyse a multi-cancer cohort, pass one acronym per
+sample (`cancer_type=["BRCA", "LUAD", ...]`); see
+[`examples/cohort_example.py`](examples/cohort_example.py). A 48-sample multi-cancer cohort
+additionally reports the high/low split and a log-rank p-value.
 
 You do **not** need to know about model variants, scaling, PCA, masking spaces, cancer
 tokens or design matrices. Everything that must be fixed is fixed internally.
@@ -123,11 +138,14 @@ Runnable scripts: [`examples/quick_start.py`](examples/quick_start.py) (Level 1)
 [`examples/missing_genes_example.py`](examples/missing_genes_example.py),
 [`examples/minimal_example.py`](examples/minimal_example.py) (Level 2).
 
-**中文**：准备两个文件即可——表达矩阵（行=样本，列=基因 symbol，TPM）与癌种（TCGA 缩写）。
+**中文**：安装用 `git clone` + `pip install .`（模型资产与 vendored COMPASS **随包分发**，
+无需设置任何环境变量；`COMPASS_OS_ROOT` 仅供开发者覆盖）。准备两个文件即可——
+表达矩阵（行=样本，列=基因 symbol，TPM）与癌种（TCGA 缩写）。
 调用 `compass_os.analyze(...)` 后，`result.summary()` 打印上面的可读报告，
 `result.save_report("compass_results/")` 输出 TSV 表格与 PDF/PNG 图件。
 **使用者不需要了解** M0–M3 的区别、标准化、PCA、掩码空间、癌种 token 或设计矩阵——
-这些都在包内部固定。可用示例见上列 `examples/` 脚本。
+这些都在包内部固定。上面展示的是 `examples/quick_start.py`（5 例 LUAD）的**真实输出**；
+多癌种队列请按样本逐一传入癌种缩写，见 `examples/cohort_example.py`。
 
 ---
 
@@ -135,7 +153,7 @@ Runnable scripts: [`examples/quick_start.py`](examples/quick_start.py) (Level 1)
 
 | kind | object | what it is | how to use it |
 |---|---|---|---|
-| **Prognostic** | `result.risk` | relative risk (linear predictor); higher = worse prognosis | ranking samples *within* a cohort |
+| **Prognostic** | `result.risk` | prognostic risk score = **Cox linear predictor** η = Xβ; higher = higher model-estimated hazard | ranking samples *within* a cohort |
 | | `result.risk_rank` | rank within the analysed cohort | ordering |
 | | `result.risk_group` | `high`/`low` by the **frozen** pan-cancer median cutoff | group comparison inside one cohort |
 | | `result.risk_group_relative` | cohort-relative median split, **display only** | used when the frozen cutoff fails to separate a cohort |
@@ -145,16 +163,20 @@ Runnable scripts: [`examples/quick_start.py`](examples/quick_start.py) (Level 1)
 
 Two cautions that matter for interpretation:
 
-* **Risk scores are relative, not absolute.** They order samples; they are not calibrated
+* **The risk score is on the log-relative-hazard scale, not a probability.** `result.risk`
+  is the Cox linear predictor η = Xβ (exposed also as `result.linear_predictor`); `exp(η)`
+  — not `η` — is the relative hazard. Risk scores order samples and are not calibrated
   probabilities. `survival_probability(t)` exists but is a baseline-hazard-derived output
   (see [ADVANCED_USAGE](docs/ADVANCED_USAGE.md)).
 * **Risk comparisons across cancer types are not meaningful.** The model contains
   cancer-type terms, so risk distributions differ by cancer type. Compare within a cohort.
 
-**中文**：`result.risk` 是**相对风险**（线性预测子，越大预后越差），只在**同一队列内**比较；
+**中文**：`result.risk` 是**预后风险分数**，即 **Cox 线性预测子** η = Xβ（别名
+`result.linear_predictor`）；`exp(η)` 才是**相对风险比**（relative hazard），不要把 η 直接
+称作 "relative risk"。数值越大表示模型估计的风险越高，只在**同一队列内**比较；
 `result.risk_group` 用**冻结的泛癌中位切点**分高/低危；当该切点无法区分某个外部队列时，
 `result.risk_group_relative` 给出**仅用于展示**的队列内中位切分。
-两点必须注意：① **风险是相对的、不是绝对概率**，`survival_probability(t)` 只是基线风险派生量；
+两点必须注意：① **风险分数在对数风险比尺度上、不是概率**，`survival_probability(t)` 只是基线风险派生量；
 ② **跨癌种比较风险没有意义**（模型含癌种项，各癌种风险分布不同）。
 
 ---
@@ -203,6 +225,12 @@ and direct access to the representation:
 rep = compass_os.get_representation(expr, cancer_type, missing_gene_strategy="strict")
 pred = compass_os.predict(expr, cancer_type, clinical=clin, model="M0,M1,M2,M3")
 rob = compass_os.check_robustness(expr, cancer_type, strategies=("reference", "zero"))
+
+# risk_rank and risk_group are separate guarantees (min_cohort_for_stratification=30):
+#   n == 1        -> neither
+#   2 <= n < 30   -> risk_rank only
+#   n >= 30       -> risk_rank + frozen-cutoff high/low
+pred = compass_os.predict(expr, cancer_type, min_cohort_for_stratification=10)
 ```
 
 Full details, including when to use each model and what each strategy means:
@@ -237,8 +265,10 @@ Three strategies exist (`reference` is the default used by `analyze`):
 | `zero` | training-space masking: the frozen scaler is applied normally, then missing genes' normalised values are set to 0 |
 | `strict` | raise `MissingGenesError` if any required gene is missing |
 
-`analyze(..., robustness="auto")` runs a second forward pass **only** when coverage falls
-below the frozen recommended threshold, and reports the comparison in plain language.
+`analyze(..., robustness="auto")` runs a second forward pass **only** when the *combined*
+QC grade is not `recommended` — i.e. when **either** axis falls below its recommended tier
+(`overall = worse(global tier, signature tier)`, see below). The comparison is reported in
+plain language.
 
 Coverage QC is always returned, at three levels: gene coverage, per-signature coverage
 (`n x 132`) and per-concept input coverage (`n x 43`). Calibrated thresholds live in
@@ -287,7 +317,8 @@ Details and the underlying evidence: [`docs/MISSING_GENES.md`](docs/MISSING_GENE
 **0.803–0.978（中位 0.962）**。
 三种策略：`reference`（默认，用冻结 TCGA 参考中位数填补）、`zero`（训练空间掩码：
 正常过冻结 scaler 后把缺失基因的标准化值置 0）、`strict`（缺任一必需基因即报错）。
-`analyze(..., robustness="auto")` **仅在**覆盖低于冻结推荐阈值时才额外跑一次前向比较，
+`analyze(..., robustness="auto")` **只有在双轴组合分级不是 recommended 时**才额外跑一次
+前向比较（即 global 轴**或** signature 轴任一低于推荐档；`overall = worse(global, Gsig)`），
 并用平实语言报告结果。质控阈值放在 `models/qc_config.json`，全部由实测曲线导出、
 **不是硬编码**：推荐 0.90、警告 0.70（全局轴与 signature 轴各一套，均为**实测覆盖度水平、
 不插值**），属**工程 QC 分层，不是生物学"安全线"**；总分级规则为
@@ -447,15 +478,27 @@ QC 分层与逐 level 判据见 `validation/results/qc_threshold_audit.tsv`，
 ## 10. Installation ｜ 安装
 
 ```bash
-pip install -e .                    # from the repository root
-export COMPASS_OS_ROOT=$(pwd)       # if models/ is not auto-discovered
+git clone https://github.com/RENSI203/COMPASS-OS.git
+cd COMPASS-OS
+pip install .                       # standard install (recommended)
+
+# developers only:
+pip install -e .                    # editable install
 ```
 
+All three installation modes (standard install, editable install, wheel) work identically.
+**No environment variable is required**: model assets and the vendored COMPASS package are shipped as
+package data inside `compass_os/assets/`, so a wheel install resolves everything from
+`site-packages` without the Git repository. `COMPASS_OS_ROOT` remains available as an
+optional **developer override** (point it at a directory containing `models/`, at an
+`assets/` directory, or at `src/compass_os`).
+
 Requires Python ≥ 3.10, PyTorch, pandas, numpy, scikit-learn, scikit-survival, matplotlib.
-Model assets (~12 MB) ship in `models/`; the upstream COMPASS package is **vendored** in
-`third_party/compass/` (MIT, see `third_party/COMPASS_LICENSE`) and is the default
-execution path. An installed `immuno-compass==2.5.3` is only a fallback when `third_party/`
-is absent (optional extra `compass-os[upstream]`).
+Model assets (~12 MB) and the upstream COMPASS package are shipped as **package data** in
+`compass_os/assets/`; the vendored copy (`assets/third_party/compass/`, MIT, see
+`assets/third_party/COMPASS_LICENSE`) is the default execution path. An installed
+`immuno-compass==2.5.3` is only a fallback when the vendored copy is absent (optional extra
+`compass-os[upstream]`).
 
 Reproduce the checks:
 
@@ -464,25 +507,77 @@ python tests/run_tests.py      # no pytest needed; or: pytest tests/
 ```
 
 `ASSET_MANIFEST.tsv` records every shipped asset (source path, size, SHA-256);
-`models/model_manifest.json` records model composition and the default model.
+`assets/models/model_manifest.json` records model composition and the default model.
 
 **中文**：依赖 Python ≥ 3.10、PyTorch、pandas、numpy、scikit-learn、scikit-survival、matplotlib。
-模型资产（约 12 MB）随 `models/` 发布；上游 COMPASS **已 vendored** 到
-`third_party/compass/`（MIT，见 `third_party/COMPASS_LICENSE`）并作为**默认执行路径**，
-只有缺少 `third_party/` 时才回退到已安装的 `immuno-compass==2.5.3`（可选 extra `compass-os[upstream]`）。
-自检命令：`python tests/run_tests.py`（无需 pytest）。
+模型资产与上游 COMPASS 均以 **package data** 形式放在 `compass_os/assets/` 内并随 wheel 分发
+（`assets/models/` 约 12 MB；`assets/third_party/compass/` 为 vendored 上游副本，MIT，
+见 `assets/third_party/COMPASS_LICENSE`），因此 **安装后不需要 Git 仓库、也不需要任何
+环境变量**。vendored 副本是**默认执行路径**；仅当其缺失时才回退到已安装的
+`immuno-compass==2.5.3`（可选 extra `compass-os[upstream]`）。
+`COMPASS_OS_ROOT` 仅作开发者覆盖用。自检命令：`python tests/run_tests.py`（无需 pytest）。
+⚠ v1.0.1 修复：此前模型通过上游 `compass.loadcompass()` 加载，其末尾
+`if file.startswith(tempfile.gettempdir()): os.remove(file)` 会把**位于临时目录下**的
+checkpoint 在加载后静默删除——安装在 `/tmp` 下的环境（容器 / CI）第一次预测后即失效。
+现改为直接 `torch.load` 本地冻结资产，数值行为不变。
 `ASSET_MANIFEST.tsv` 记录全部随包资产的来源/大小/SHA-256，
-`models/model_manifest.json` 记录模型组成与默认模型。
+`assets/models/model_manifest.json` 记录模型组成与默认模型。
 
 ---
 
 ## 11. Citation ｜ 引用
 
-See [`CITATION.cff`](CITATION.cff). If you use this software, please cite it together with
-the upstream COMPASS publication.
+See [`CITATION.cff`](CITATION.cff) (software authors: Jiahao Ren, Junyi Xin). If you use
+this software, please cite it together with the upstream COMPASS publication.
+
+**Upstream COMPASS model**
+
+> Shen, W., Moon, I., Nguyen, T.H. et al. Generalizable AI predicts immunotherapy outcomes
+> across cancers and treatments. *Nat Med* **32**, 3010–3022 (2026).
+> https://doi.org/10.1038/s41591-026-04502-7
+
+```bibtex
+@article{shen2026compass,
+  title   = {Generalizable AI predicts immunotherapy outcomes across cancers and treatments},
+  author  = {Shen, W. and Moon, I. and Nguyen, T.H. and others},
+  journal = {Nature Medicine},
+  volume  = {32},
+  pages   = {3010--3022},
+  year    = {2026},
+  doi     = {10.1038/s41591-026-04502-7}
+}
+```
+
+**COMPASS-OS**
+
+```bibtex
+@software{compass_os_2026,
+  title     = {COMPASS-OS: pan-cancer survival prediction and mechanism-oriented
+               transcriptomic representation framework},
+  author    = {Ren, Jiahao and Xin, Junyi},
+  year      = {2026},
+  version   = {1.0.1},
+  license   = {MIT},
+  url       = {https://github.com/RENSI203/COMPASS-OS}
+}
+```
+
+**Contact ｜ 联系方式**
+
+Questions, bug reports and collaboration enquiries:
+**Jiahao Ren** — rjh2623826975@stu.njmu.edu.cn
+(please also use the [issue tracker](https://github.com/RENSI203/COMPASS-OS/issues) for
+reproducible bug reports)
 
 **中文**：引用信息见 [`CITATION.cff`](CITATION.cff)（软件作者：Jiahao Ren, Junyi Xin）。
-使用本软件时请**同时引用上游 COMPASS 论文**。
+使用本软件时请**同时引用上游 COMPASS 论文**：
+
+> Shen, W., Moon, I., Nguyen, T.H. et al. Generalizable AI predicts immunotherapy outcomes
+> across cancers and treatments. *Nat Med* **32**, 3010–3022 (2026).
+> https://doi.org/10.1038/s41591-026-04502-7
+
+联系方式：**Jiahao Ren** — rjh2623826975@stu.njmu.edu.cn；
+可复现的 bug 报告也欢迎走 [issue tracker](https://github.com/RENSI203/COMPASS-OS/issues)。
 
 ---
 

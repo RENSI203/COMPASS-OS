@@ -23,38 +23,38 @@ DATA = PKG / "data"
 
 #: (资产名, 包内相对路径, 原项目相对路径, 类别, 用途, 推理必需, 测试必需, 示例必需, 是否可改)
 ITEMS = [
-    ("pretrainer_ckpt", "models/pretrainer.pt",
+    ("pretrainer_ckpt", "src/compass_os/assets/models/pretrainer.pt",
      "COMPASS-main/paper/checkpoint/latest/pretrainer.pt",
      "frozen_model", "COMPASS 预训练 checkpoint：encoder + 132 基因集 / 43 概念投影 + Datascaler",
      True, True, True, False),
-    ("lock_M0", "models/locked_M0.json",
+    ("lock_M0", "src/compass_os/assets/models/locked_M0.json",
      "scripts_dev/analysis_out_cluster/ref_lock/locked_M0.json",
      "frozen_model", "M0 锁定 Cox 头（仅临床基线）", True, True, True, False),
-    ("lock_M1", "models/locked_M1.json",
+    ("lock_M1", "src/compass_os/assets/models/locked_M1.json",
      "scripts_dev/analysis_out_cluster/ref_lock/locked_M1.json",
      "frozen_model", "M1 锁定 Cox 头（仅 43 概念）", True, True, True, False),
-    ("lock_M2", "models/locked_M2.json",
+    ("lock_M2", "src/compass_os/assets/models/locked_M2.json",
      "data_tcga/processed/locked_model/locked_M2.json",
      "frozen_model", "M2 锁定 Cox 头（主模型：临床 + 43 概念）", True, True, True, False),
-    ("lock_M3", "models/locked_M3.json",
+    ("lock_M3", "src/compass_os/assets/models/locked_M3.json",
      "data_tcga/processed/locked_model/locked_M3.json",
      "frozen_model", "M3 锁定 Cox 头（M2 + PC1–10，敏感性模型）", True, True, True, False),
-    ("pca_M3", "models/locked_pca_M3.npz",
+    ("pca_M3", "src/compass_os/assets/models/locked_pca_M3.npz",
      "data_tcga/processed/locked_model/locked_pca_M3.npz",
      "frozen_model", "M3 的锁定 PCA（components/mean/scale/genes），禁止在用户队列重拟合",
      True, True, True, False),
-    ("ref_quantiles", "models/reference_quantiles.json",
+    ("ref_quantiles", "src/compass_os/assets/models/reference_quantiles.json",
      "data_tcga/processed/locked_model/reference_quantiles.json",
      "frozen_input", "TCGA log2(TPM+1) 参考分位数（1024 点）：跨平台映射与缺失基因填充中位数来源",
      False, True, False, False),
-    ("qc_config", "models/qc_config.json",
+    ("qc_config", "src/compass_os/assets/models/qc_config.json",
      "validation/results/qc_config.json",
      "frozen_config", "由 missing-gene stress test 实测曲线确定的 QC 阈值（global 轴已定；Gsig 待补）",
      True, True, True, False),
-    ("upstream_license", "third_party/COMPASS_LICENSE",
+    ("upstream_license", "src/compass_os/assets/third_party/COMPASS_LICENSE",
      "COMPASS-main/LICENSE",
      "license", "上游 COMPASS 的 MIT 许可证（必须随附）", False, False, False, False),
-    ("upstream_compass_pkg", "third_party/compass",
+    ("upstream_compass_pkg", "src/compass_os/assets/third_party/compass",
      "COMPASS-main/compass",
      "upstream_code", "上游 COMPASS 包源码 + tokenizer 资产（conception_processed.tsv 等）",
      True, True, True, False),
@@ -119,7 +119,7 @@ def build_derived(source_root: Path) -> None:
 
     codes = json.loads((source_root / "COMPASS-main/compass/tokenizer/cancer_code.json")
                        .read_text(encoding="utf-8"))
-    ct = [c for c in json.loads((REPO / "models/locked_M2.json").read_text(encoding="utf-8"))
+    ct = [c for c in json.loads((REPO / "src/compass_os/assets/models/locked_M2.json").read_text(encoding="utf-8"))
           ["feature_names"] if c.startswith("CT_")]
     rows = [{"cancer_type": k, "compass_code": int(v),
              "ct_column": (f"CT_{k}" if f"CT_{k}" in ct else ""),
@@ -166,25 +166,25 @@ def write_manifest(source_root: Path) -> None:
         "default_model": "M2",
         "models": {
             "M0": {"label": "clinical baseline",
-                   "lock": "models/locked_M0.json",
+                   "lock": "src/compass_os/assets/models/locked_M0.json",
                    "features": "CancerType(one-hot) + Age + Sex + Stage",
                    "description": "仅临床变量的基线模型。"},
             "M1": {"label": "COMPASS concept model",
-                   "lock": "models/locked_M1.json",
+                   "lock": "src/compass_os/assets/models/locked_M1.json",
                    "features": "43 COMPASS concepts",
                    "description": "仅 COMPASS 43 概念，无临床变量。"},
             "M2": {"label": "COMPASS concepts + clinical (primary)",
-                   "lock": "models/locked_M2.json",
+                   "lock": "src/compass_os/assets/models/locked_M2.json",
                    "features": "CancerType(one-hot) + Age + Sex + Stage + 43 COMPASS concepts",
                    "description": "当前冻结的主模型（frozen primary model）。"},
             "M3": {"label": "COMPASS concepts + clinical + expression PCs",
-                   "lock": "models/locked_M3.json",
-                   "pca": "models/locked_pca_M3.npz",
+                   "lock": "src/compass_os/assets/models/locked_M3.json",
+                   "pca": "src/compass_os/assets/models/locked_pca_M3.npz",
                    "features": "M2 + PC1-PC10（锁定 PCA，作用于 log2(TPM+1)）",
                    "description": "表达主成分增强模型，作为附加模型提供。"},
         },
-        "checkpoint": "models/pretrainer.pt",
-        "reference_quantiles": "models/reference_quantiles.json",
+        "checkpoint": "src/compass_os/assets/models/pretrainer.pt",
+        "reference_quantiles": "src/compass_os/assets/models/reference_quantiles.json",
         "missing_gene": {
             "strategies": ["reference", "zero", "strict"],
             "default": "reference",
@@ -194,9 +194,9 @@ def write_manifest(source_root: Path) -> None:
             "zero_space": "MinMax-scaled input space (post-Datascaler)",
         },
     }
-    (REPO / "models" / "model_manifest.json").write_text(
+    (REPO / "src/compass_os/assets/models" / "model_manifest.json").write_text(
         json.dumps(model_meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print("models/model_manifest.json 已写出")
+    print("src/compass_os/assets/models/model_manifest.json 已写出")
 
 
 def verify() -> int:

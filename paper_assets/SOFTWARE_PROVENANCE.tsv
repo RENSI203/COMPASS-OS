@@ -7,8 +7,8 @@ sklearn	1.9.0	importlib
 sksurv	0.28.0	importlib	
 torch	2.10.0+cpu	importlib	
 matplotlib	3.10.8	importlib	
-compass (upstream, vendored)	2.5.3	third_party/compass/__init__.py sha256=644d115b9326a1f9	upstream MIT license; vendored copy is the default execution path
-compass-os	1.0.0	src/compass_os/__init__.py	public package version
+compass (upstream, vendored)	2.5.3	src/compass_os/assets/third_party/compass/__init__.py sha256=644d115b9326a1f9	upstream MIT license; vendored copy is the default execution path
+compass-os	1.0.1	src/compass_os/__init__.py	public package version
 asset:pretrainer_ckpt	frozen_model	sha256=4fd174b45be816f3b1b3da32541a1c99	COMPASS 预训练 checkpoint：encoder + 132 基因集 / 43 概念投影 + Datascaler
 asset:lock_M0	frozen_model	sha256=f368eb2e399f16162dbab168c474b094	M0 锁定 Cox 头（仅临床基线）
 asset:lock_M1	frozen_model	sha256=d4998ecf646aa264a05462881536fadf	M1 锁定 Cox 头（仅 43 概念）
@@ -27,3 +27,5 @@ release: release commit	1.0.0	3f2aeadf18770e4f88faaa5991b654763d2f3f6f	'Bilingua
 release: commit history	1.0.0	a237319 -> f909782 -> 3f2aead	initial release candidate -> release metadata -> bilingual README
 release: release date	1.0.0	2026-10-03	tag push date (UTC+8)
 release: tag URL	v1.0.0	https://github.com/RENSI203/COMPASS-OS/releases/tag/v1.0.0	GitHub Release notes based on RELEASE_NOTES_v1.0.0.md
+release: v1.0.1 status	1.0.1	prepared; tag NOT yet created	bug-fix release on top of v1.0.0; v1.0.0 tag untouched
+asset layout (v1.0.1)	1.0.1	src/compass_os/assets/{models,third_party}	runtime assets moved into the package as package data; content hashes unchanged (see ASSET_MANIFEST.tsv)

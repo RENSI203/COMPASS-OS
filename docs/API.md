@@ -40,8 +40,10 @@
 `concept_correlation` / `signature_correlation`（逐样本 Pearson）、`concept_input_coverage`、
 `gene_coverage`、`signature_gene_coverage_reference`、`robustness_flag`。
 
-⚠ `robustness_flag` 目前恒为 `"not_calibrated"`：**不设人为 PASS/WARNING/FAIL 阈值**，
-请使用连续指标；阈值在 missing-gene stress test 完成后写入 `qc_config.json`。
+⚠ `robustness_flag` 恒为 `"continuous_only"`：**不存在单一的二元 PASS/FAIL 判定**。
+覆盖度 QC 分级已按冻结阈值校准（recommended 0.90 / warning 0.70，global 与 signature 双轴，
+`overall = worse(global, Gsig)`，见 `models/qc_config.json`）；而
+reference-versus-zero 稳健性比较只提供连续指标，请与已校准的覆盖度分级一起解读。
 
 ## `CoverageQC`
 

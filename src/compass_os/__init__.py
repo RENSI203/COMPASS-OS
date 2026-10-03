@@ -37,7 +37,7 @@ from .api import (PredictionResult, RepresentationResult, RobustnessResult,
 from .exceptions import (AssetNotFoundError, CompassOSError, InputError,
                          MissingGenesError, UnknownCancerTypeError)
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 #: Level 1（Quick）与 Level 2（Advanced）正式导出；其余模块为内部实现。
 __all__ = [

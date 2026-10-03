@@ -171,9 +171,9 @@ def qc_config() -> dict | None:
     阈值由 ``validation/run_missing_gene_validation.py`` 的实测曲线确定，
     **不是**先验拍定；未冻结前 package 不给覆盖度警告（只给覆盖度数值）。
     """
-    from ._paths import repo_root
-    p = repo_root() / "models" / "qc_config.json"
-    if not p.is_file():
+    from ._paths import qc_config_path
+    p = qc_config_path()
+    if p is None or not p.is_file():
         return None
     import json
     return json.loads(p.read_text(encoding="utf-8"))

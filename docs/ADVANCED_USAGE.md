@@ -63,8 +63,10 @@ compass_os.predict(expr_tpm,  ct)                       # input_scale="tpm" (def
 compass_os.predict(expr_log2, ct, input_scale="log2_tpm1")
 ```
 
-Scales are declared, never guessed. Raw microarray intensities need external
-harmonisation first; there is no `input_scale="microarray"` in v1.
+Scales are declared, never guessed, and `analyze()` forwards `input_scale` to the same
+resolution path as Level 2 (fixed in v1.0.1 — in v1.0.0 the one-click entry point ignored it).
+Raw microarray intensities need external harmonisation first; there is no
+`input_scale="microarray"` in v1.
 
 ---
 
@@ -79,12 +81,12 @@ rob.concept_correlation["reference_vs_zero"]
 rob.signature_correlation["reference_vs_zero"]
 rob.gene_coverage
 rob.concept_input_coverage["reference"]    # n × 43
-rob.robustness_flag                        # graded against the frozen qc_config
+rob.robustness_flag                        # "continuous_only": no binary pass/fail in v1.x
 ```
 
-Each strategy costs one forward pass. `analyze(..., robustness="auto")` is the cheap
-version: it only performs the comparison when coverage falls below the frozen recommended
-threshold.
+Each strategy costs one forward pass. `analyze(..., robustness="auto")` is the cheap version:
+it performs the comparison only when the combined QC grade
+(`overall = worse(global tier, signature tier)`) is not `recommended`.
 
 ---
 
@@ -115,14 +117,24 @@ pred.risk_group        # high/low by the frozen pan-cancer median cutoff
 pred.risk_rank         # rank within the submitted cohort
 ```
 
+Ranking and stratification are separate guarantees, controlled by
+`min_cohort_for_stratification` (default 30):
+
+| cohort size | `risk_rank` | `risk_group` |
+|---|---|---|
+| `n == 1` | not defined | not defined |
+| `2 ≤ n < min_cohort_for_stratification` | available | **not assigned** |
+| `n ≥ min_cohort_for_stratification` | available | frozen-cutoff `high`/`low` |
+
 Two things to keep in mind:
 
 * the cutoff is a **single pan-cancer value** from the training set, not your cohort median,
   so a sample's group does not depend on the other samples submitted;
 * risk levels shift by cancer type, so with external cohorts the frozen cutoff frequently
   places every sample in one group. At Level 1, `analyze` then reports a *cohort-relative*
-  split for display only and says so explicitly. At Level 2 you get the frozen grouping
-  unchanged — check that both groups are non-empty before using it.
+  split (`result.risk_group_relative`, labelled `cohort_relative_median_display_only`) for
+  display only and says so explicitly — it is never merged into `risk_group`. At Level 2 you
+  get the frozen grouping unchanged — check that both groups are non-empty before using it.
 
 ---
 
@@ -132,7 +144,8 @@ Two things to keep in mind:
 pred.survival_probability([365, 1095, 1825])
 ```
 
-`S_i(t) = exp(−H0(t)·exp(risk))`, with the Breslow baseline shipped in the model lock.
+`S_i(t) = exp(−H0(t)·exp(η))` where `η = risk` is the Cox linear predictor, with the Breslow
+baseline shipped in the model lock.
 This is a **baseline-hazard-derived output**: the baseline comes from the training domain,
 and in external validation the strict-transport absolute-risk calibration was substantially
 weaker than the discrimination. It is not a validated individual absolute-risk predictor;

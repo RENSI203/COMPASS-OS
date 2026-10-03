@@ -162,7 +162,8 @@ class AnalysisResult:
         L.append("")
 
         L.append("SURVIVAL")
-        L.append(f"{'Risk estimates':<32}Available (relative risk, linear predictor)")
+        L.append(f"{'Risk estimates':<32}Available "
+                 "(prognostic risk score; Cox linear predictor)")
         if self.risk_group is not None:
             n_hi = int((self.risk_group == "high").sum())
             n_lo = int((self.risk_group == "low").sum())
@@ -248,6 +249,14 @@ class AnalysisResult:
         return f"{detail} (no graded threshold applied)"
 
     def _coverage_ok(self) -> bool:
+        """QC 是否处于 recommended 档（**双轴**：overall = worse(global, Gsig)）。
+
+        v1.0.1 fix：此前只看 global coverage，会出现
+        ``QC = Usable with caution`` 却 ``Robustness check = Not required`` 的自相矛盾摘要。
+        """
+        tier = (self.qc.tiers or {}).get("overall")
+        if tier is not None:
+            return tier == "recommended"
         cfg = _qc.qc_config()
         rec = (cfg or {}).get("recommended_global_coverage")
         return rec is not None and self.qc.gene_coverage >= rec
@@ -439,23 +448,35 @@ def analyze(expression, cancer_type, clinical=None, survival=None, *,
             # 不做自动转换，只提示（可能是 log2 或已标准化的矩阵）
             pass
 
-    pred = _api.predict(expr, ct.tolist(), clinical=clin, model="default")
+    # v1.0.1 fix: input_scale 必须显式透传（否则 Level 1 会把 log2(TPM+1) 当 TPM 处理）。
+    # batch_size / device 仍由 Quick API 固定，不对外暴露。
+    pred = _api.predict(expr, ct.tolist(), clinical=clin, model="default",
+                        input_scale=input_scale)
     q = pred.qc
     cfg = _qc.qc_config()
     rec = (cfg or {}).get("recommended_global_coverage")
 
+    # v1.0.1 fix: auto 由**双轴组合分级**驱动（overall = worse(global, Gsig)），
+    # 而不是只看 global coverage。
+    tier = (q.tiers or {}).get("overall")
+    if tier is not None:
+        need_robustness = tier != "recommended"
+    else:
+        # 明确的 fallback：本安装未冻结阈值 ⇒ 退化为 global coverage 比较，并在 notes 说明
+        need_robustness = rec is not None and q.gene_coverage < rec
+
     rob = None
-    if robustness is True or (robustness == "auto" and rec is not None
-                              and q.gene_coverage < rec):
+    if robustness is True or (robustness == "auto" and need_robustness):
         rob = _robustness_block(expr, ct, clin, input_scale, pred)
     notes = []
-    if robustness == "auto" and rec is None:
+    if robustness == "auto" and tier is None:
         notes.append("QC thresholds are not frozen in this installation; "
-                     "coverage is reported as continuous values only.")
+                     "coverage is reported as continuous values only"
+                     + ("." if rec is None else
+                        " (robustness fell back to the global-coverage comparison)."))
     if q.signature_gene_coverage is not None and not (cfg or {}).get("recommended_Gsig_coverage"):
-        notes.append("A calibrated signature-coverage threshold is not available yet "
-                     "(signature-targeted calibration pending); signature coverage is "
-                     "reported as a continuous value.")
+        notes.append("This installation's qc_config.json does not define a signature-coverage "
+                     "threshold; signature coverage is reported as a continuous value.")
     if input_scale == "tpm" and expr.size and float(np.nanmax(expr.to_numpy(float))) < 30:
         notes.append("The expression values look small for linear TPM; if they are "
                      "log2(TPM+1), re-run with input_scale='log2_tpm1'.")
