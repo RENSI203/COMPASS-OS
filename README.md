@@ -622,10 +622,12 @@ package data inside `compass_os/assets/`, so a wheel install resolves everything
 optional **developer override** (point it at a directory containing `models/`, at an
 `assets/` directory, or at `src/compass_os`).
 
-Requires Python ≥ 3.10 and, installed automatically: PyTorch, pandas, numpy, scipy,
-scikit-learn, scikit-survival, matplotlib, seaborn (the last is used by the vendored COMPASS
-plotting utilities that the representation path imports). **PyTorch is a core runtime
-dependency**, not an extra: the frozen COMPASS forward pass needs it.
+Requires Python ≥ 3.10 and, installed automatically: PyTorch, torchvision, pandas, numpy,
+scipy, scikit-learn, scikit-survival, matplotlib, seaborn, tqdm, wandb, joblib, einops,
+packaging, plotly, gdown and umap-learn. **PyTorch is a core runtime dependency**, not an
+extra: the frozen COMPASS forward pass needs it. The remaining packages are required because
+`import compass` (the vendored upstream package) imports its encoder and utility modules at
+module level, so the first `predict()` pulls them in even for pure inference.
 Model assets (~12 MB) and the upstream COMPASS package are shipped as **package data** in
 `compass_os/assets/`; the vendored copy (`assets/third_party/compass/`, MIT, see
 `assets/third_party/COMPASS_LICENSE`) is the default execution path. An installed
