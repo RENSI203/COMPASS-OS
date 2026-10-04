@@ -42,7 +42,9 @@
 | **5** | `7571035` | ⑨ 审查文档**第三次**出现开发机路径（前两次只写了教训、未加防护） | **已修复，并新增机械化守卫** `tests/test_audit_docs_paths.py`（守卫在编写过程中又抓出 2 处，含描述正则的那段本身） |
 | **收口** | `4ea61a9` / `b591b4c` | ⑩ 声明口径：等效表述无依据、非零误差称"逐位"、用未配对中位判优劣、"50–80 %"口径不明 | **4 项全部改正**（§6 前置说明） |
 
-**累计：10 处真实缺陷，全部已修复并验证；0 项遗留 FAIL。**
+| **收口②** | — | ⑪ **`torch` / `seaborn` 未声明为运行依赖** —— `pip install` "成功"但首次 `predict()` 即 `ModuleNotFoundError`；README 却已声称 Requires PyTorch | **已修复并验证**（声明/解析/运行三层） |
+
+**累计：11 处真实缺陷，全部已修复并验证；0 项遗留 FAIL。**
 
 ### 2.1 未修复但已正式记录的限制（非缺陷）
 
@@ -84,6 +86,24 @@
 ```bash
 SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 ```
+
+### 3.0 依赖安装验证（本轮发现的**发布级缺陷**）
+
+| 步骤 | 结果 |
+|---|---|
+| `pip install --no-deps <wheel>`（此前唯一的安装验证） | ✅ 能跑 —— 但**掩盖了依赖声明缺陷**（基础环境恰好已有 torch/seaborn） |
+| **普通 `pip install <wheel>`**（全新隔离环境） | ❌ **首次 `predict()` 即 `ModuleNotFoundError: No module named 'seaborn'`** |
+| 根因 | `torch`（`representation.py` 的冻结前向）与 `seaborn`（vendored `compass/utils/{plotter,crmap}.py` **模块级**导入）**从未声明**；`scipy` 仅靠传递依赖存在。**README 早已写 "Requires … PyTorch"，与元数据矛盾** |
+| 修复 | `[project].dependencies` 补 `scipy>=1.11`、`torch>=2.0`、`seaborn>=0.13`；README 依赖说明同步 |
+| 修复后声明（wheel METADATA 实测） | 8 条核心依赖 + 3 个 extra ✅ |
+| **解析验证** | ✅ pip 计划（`Collecting`）**逐条拉取全部 8 个声明依赖**，含 `torch>=2.0`、`seaborn>=0.13`、`scipy>=1.11` |
+| **完整 PyPI 下载安装** | ⚠️ **未完成** —— `torch` 约 800 MB，本环境带宽约 50–90 kB/s，无法在合理时间内完成 |
+| **运行期验证（依赖齐备时）** | ✅ 见 §3.1（`--no-deps` 装入已具备依赖的环境，五项验收全通过） |
+
+> **残余动作（发布前必做）**：在带宽充足的机器上执行一次
+> `pip install <final-wheel>`，确认自动装齐依赖后 `predict()` / `sample_path()` 可跑通。
+> 本轮已验证**声明正确 + 解析正确 + 依赖齐备时运行正确**，
+> 唯独**完整在线安装**因带宽未走完 —— 记 **NOT VERIFIED（完整在线安装）**。
 
 ### 3.1 最终分发包验收（针对**最终 wheel**，非源码树）
 
@@ -141,6 +161,8 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 | 8 | **多癌种混合队列分层适用性** | 否（有 `risk_group_relative` 且限显示） | **是**（分层可迁移性） | 论文**待核实**；软件须限定不得跨队列比较 |
 | 9 | **探索性免疫程序类声明** | **否**（不在候选内） | **是 —— 但不在本篇软件论文内** | **不属本候选**；若写入论文须**单独**做 outcome-conditioned selection 审查 |
 | 10 | 全量 12/38 队列轴重跑 | 否 | 否（指标定义已小规模独立验证） | **仅属后续工作** |
+| 11 | **完整在线 `pip install`（依赖自动下载安装）** | **是（发布前必做）** | 否 | 声明与解析已验证、依赖齐备时运行已验证；仅**下载**因带宽未走完 ⇒ 发布前须在带宽充足机器上补做 |
+| 12 | 冻结切点的**分层后预后区分** | 否 | **是** | transport 源表本轮未定位到 ⇒ **来源报告值，未独立复核**；须专门验证 |
 
 ### 4.1 结论：blocker 判定
 
@@ -167,7 +189,7 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 | 5 | **QC 阈值的跨平台稳健性** | 仅在 12 队列标定 |
 | 6 | **`Age` 生理范围** | 无校验 |
 | 7 | **导出文件逐文件读回** | 仅核对上游同源 |
-| 8 | **多癌种混合队列的分层适用性** | 冻结切点实测 90:30 偏斜 |
+| 8 | **多癌种混合队列的分层适用性** | 冻结切点在混合队列上产生 90:30 不均衡分组；**该比例本身不是失效证据**，待验证的是分层后预后区分与适用范围 |
 | 9 | **等高/低风险免疫程序类探索性声明** | **不在候选内**；其 outcome-conditioned selection **未经核查** |
 | 10 | 全量 12 / 38 队列轴**重跑** | 昂贵；指标定义已由小规模独立验证 |
 
@@ -237,6 +259,19 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 | 7 | 决定 sdist 字节可重复性：pin 构建后端 或 正式接受并改用 content-sha256 | 第 2 阶段遗留 |
 
 ---
+
+### 3.1b sdist 验收（本轮补齐，不再"只校验 wheel"）
+
+| 项 | 结果 |
+|---|---|
+| 最终 sdist SHA256 | `ddd2f3ad3b7c1cfcd7e0cbaa6bb5b6253bba5ba6ed6024bf9bdeea4578ff0262`（**TREE-SPECIFIC**） |
+| 内容 | **162 条目**；`pretrainer.pt` / `locked_M2.json` / `qc_config.json` / vendored compass / `COMPASS_LICENSE` / `gene_vocabulary.txt` / `cancer_codes.tsv` / 顶层元数据 **全部齐备** |
+| 字节码 | **0 条** ✅ |
+| **从 sdist 构建并安装** | ✅ `pip install <sdist>` → `Successfully installed compass-os-1.1.0` |
+| **从 sdist 安装后的运行** | ✅ 核心预测 `(20,1)`；`sample_path` + PNG/PDF/SVG/HTML 导出全部通过 |
+| 加载路径 | `site-packages`（非源码树） |
+
+⇒ **sdist 已作为独立分发包验收通过**；其哈希因收录 `docs/*.md` 而随文档提交变化，属**构造性时点值**。
 
 ### 3.2 论文元数据同步（本轮已授权并完成）
 
