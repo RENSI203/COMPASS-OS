@@ -1,6 +1,7 @@
 check	path	detail	status
 artifact	src/compass_os/__pycache__/__init__.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	src/compass_os/__pycache__/_paths.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	src/compass_os/__pycache__/_render_bridge.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	src/compass_os/__pycache__/analysis.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	src/compass_os/__pycache__/api.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	src/compass_os/__pycache__/exceptions.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
@@ -8,6 +9,8 @@ artifact	src/compass_os/__pycache__/plotting.cpython-312.pyc	python 缓存（.gi
 artifact	src/compass_os/__pycache__/preprocessing.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	src/compass_os/__pycache__/qc.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	src/compass_os/__pycache__/representation.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	src/compass_os/__pycache__/sample_path.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	src/compass_os/__pycache__/sample_path_render.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	src/compass_os/__pycache__/survival.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	src/compass_os/assets/third_party/compass/__pycache__/__init__.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	src/compass_os/assets/third_party/compass/__pycache__/main.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
@@ -54,15 +57,13 @@ artifact	tests/__pycache__/test_analysis.cpython-312.pyc	python 缓存（.gitign
 artifact	tests/__pycache__/test_api.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	tests/__pycache__/test_assets.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	tests/__pycache__/test_duplicate_genes.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	tests/__pycache__/test_input_contract.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	tests/__pycache__/test_packaging.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	tests/__pycache__/test_qc_tiers.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	tests/__pycache__/test_reproducibility.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	tests/__pycache__/test_sample_path.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
+artifact	tests/__pycache__/test_sample_path_integration.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
 artifact	tests/__pycache__/test_v101_regressions.cpython-312.pyc	python 缓存（.gitignore 已覆盖，commit 前清理）	WARN
-artifact	validation/output/smoke_run/fig_stress_curves.png	本地输入/运行产物（.gitignore 已覆盖）	WARN
-artifact	validation/output/smoke_run/fig_stress_uno_c.png	本地输入/运行产物（.gitignore 已覆盖）	WARN
-artifact	validation/output/smoke_run/stress_curves.tsv	本地输入/运行产物（.gitignore 已覆盖）	WARN
-artifact	validation/output/smoke_run/stress_raw.tsv	本地输入/运行产物（.gitignore 已覆盖）	WARN
-artifact	validation/output/smoke_run/stress_report.md	本地输入/运行产物（.gitignore 已覆盖）	WARN
 asset-hash	ASSET_MANIFEST.tsv	校验：13 项 ⇒ 异常 0	PASS
 required-file	README.md	存在	PASS
 required-file	LICENSE	存在	PASS
