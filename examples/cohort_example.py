@@ -42,7 +42,15 @@ def main() -> int:
     print(res.risk.round(4).to_string())
 
     tab = res.risk.copy()
-    tab["risk_group(默认模型)"] = res.risk_group[res.default_model]
+    # risk_group 只在队列 >= min_cohort_for_stratification 时给出（默认 30）；
+    # 本示例仅 5 例 ⇒ 必为 None。这里显式处理，避免在示例里抛
+    # `TypeError: 'NoneType' object is not subscriptable`。
+    if res.risk_group is None:
+        tab["risk_group(默认模型)"] = "(未分层：队列 < 30 例)"
+        print(f"\n⚠ 队列仅 {len(expr)} 例（< 30），不产生冻结切点 high/low 分层 ⇒ "
+              "risk_group=None；已用占位列写入，数值请勿用于分层结论。")
+    else:
+        tab["risk_group(默认模型)"] = res.risk_group[res.default_model]
     tab["os_time_days"] = lab["os_time_days"]
     tab["os_event"] = lab["os_event"]
     tab.to_csv(OUT / "cohort_risk.tsv", sep="\t")

@@ -156,12 +156,35 @@ def run(args) -> int:
     out.mkdir(parents=True, exist_ok=True)
     tag = "" if args.nshards == 1 else f"_shard{args.shard}of{args.nshards}"
     raw_path = out / f"raw{tag}.tsv"
+    # 溯源侧车文件与 raw **同 tag 配对**：`design.json` 是单文件、每次运行被覆盖，
+    # 无法同时描述 12 队列曲线轴与 38 队列经验轴两次运行（见 docs/audit/04）。
+    design_path = out / f"raw{tag}.design.json"
+
+    def design_signature() -> dict:
+        """**影响数值**的运行参数指纹；变化时必须拒绝续跑。"""
+        return {"cohorts": list(args.cohorts.split(",")) if args.cohorts else None,
+                "max_per_cohort": int(args.max_per_cohort),
+                "repeats": int(args.repeats),
+                "seed": int(args.seed),
+                "mask_types": str(args.mask_types),
+                "nonsig_levels": [float(x) for x in args.nonsig_levels]}
+
     done = set()
+    prev_design = None
+    if design_path.is_file():
+        prev_design = json.loads(design_path.read_text(encoding="utf-8")).get("params")
     if raw_path.is_file() and not args.restart:
+        if prev_design is not None and prev_design != design_signature():
+            raise SystemExit(
+                f"{raw_path} 已存在，但其溯源参数与本次调用不一致：\n"
+                f"  已有: {prev_design}\n  本次: {design_signature()}\n"
+                "续跑会把两套定义**混进同一个 raw 文件**。请改用 --restart 重新开始，"
+                "或使参数一致（含 --seed / --max-per-cohort / --repeats / --cohorts / "
+                "--mask-types / --nonsig-levels）。")
         prev = pd.read_csv(raw_path, sep="\t")
         done = {(r.mask_type, float(r.level), int(r.repeat), r.strategy, str(r.cohort))
                 for r in prev.itertuples()}
-        print(f"续跑：已有 {len(prev)} 行结果")
+        print(f"续跑：已有 {len(prev)} 行结果（溯源参数一致）")
 
     pheno = load_pheno(Path(args.pheno))
     cohorts = pick_cohorts(pheno, args.cohorts, args.max_per_cohort)
@@ -201,11 +224,20 @@ def run(args) -> int:
                      "ccov": r.qc.concept_input_coverage}
     print(f"FULL 基线完成（{time.time() - t0:.0f}s）")
     cut = median_cutoff(_csu.default_model())
-    json.dump({"cohorts": cohorts, "n_loaded": len(data),
-               "samples": {c: len(d["ids"]) for c, d in data.items()},
-               "cut": cut, "max_per_cohort": args.max_per_cohort,
-               "repeats": args.repeats},
-              open(out / "design.json", "w"), ensure_ascii=False, indent=1)
+    design = {"cohorts": cohorts, "n_loaded": len(data),
+              "samples": {c: len(d["ids"]) for c, d in data.items()},
+              "cut": cut, "max_per_cohort": args.max_per_cohort,
+              "repeats": args.repeats,
+              # 与 raw 配对的参数指纹（守卫用）与本次运行标识
+              "params": design_signature(), "tag": tag,
+              "raw_file": raw_path.name}
+    json.dump(design, open(design_path, "w"), ensure_ascii=False, indent=1)
+    # 兼容既有读者（validation/summarize_validation.py 读 out/"design.json"）：
+    # 显式标注这是"最后一次运行"，完整溯源请看配对侧车文件。
+    design_last = dict(design); design_last["_note"] = (
+        "LAST RUN ONLY — 该文件每次运行被覆盖。多次运行（如 12 队列曲线轴 + 38 队列"
+        "经验轴）请查阅与各自 raw 配对的 raw<tag>.design.json。")
+    json.dump(design_last, open(out / "design.json", "w"), ensure_ascii=False, indent=1)
 
     rows = []
     fh = open(raw_path, "a", encoding="utf-8")
