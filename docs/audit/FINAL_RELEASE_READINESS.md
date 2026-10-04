@@ -92,7 +92,7 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 | 构建来源 | clean worktree `/tmp/gh_audit/rel`，检出最终候选，未提交改动 **0** |
 | **声明的发布构建 epoch** | **`1791113420`**（= 代码冻结点 `7571035` 的提交时间）—— **固定值，不由 HEAD 推导**，故后续纯文档提交**不会**改变产物哈希 |
 | `compass_os-1.1.0-py3-none-any.whl` | **`7af6c2d7f36a02b4ac6033913d1268100d97de174543b2b368290043a9cbffbc`**（15,871,951 B） |
-| `compass_os-1.1.0.tar.gz` | `ca0a81d504ff13a0be5d82bc23576081a93f9a7dd9e7e537770917dfb541ef7e`（**TREE-SPECIFIC**，见下） |
+| `compass_os-1.1.0.tar.gz` | `e1d0ada350fb0f25a2c738f80dfc569751037f772fca970d5b6a43ddca1b0db6`（**TREE-SPECIFIC，且是时点值**，见下） |
 | 全新环境 | `venv --system-site-packages`，`pip install --no-deps --no-cache-dir --force-reinstall <wheel>` |
 | **源码遮蔽检查** | 实际加载路径 = `…/relenv/lib/python3.12/site-packages/compass_os/__init__.py`；`sys.path` **不含**仓库 `src/`；基础环境**无**竞争安装 |
 | ① 核心预测 | ✅ `predict(model="M2,M3")` 返回 `['M2','M3']` |
@@ -112,7 +112,12 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 > 3. **sdist 无法同样固定**：`MANIFEST.in` 收录 `docs/*.md`，因此**任何文档提交都会改变
 >    sdist 内容与哈希**。故 sdist 哈希标注为 **TREE-SPECIFIC**，必须在**最终发布树**上重新测量，
 >    且其字节哈希本身也不跨构建可重复（目录 mtime）。
->    **引用与校验一律以 wheel 的 `7af6c2d7…` 为准。**
+>    本轮实测该哈希**移动了三次**（每次文档提交一次），这正是其性质的直接证据。
+>    **引用与校验一律以 wheel 的 `7af6c2d7…` 为准**（该值已在**三个不同 HEAD** 上重建复现）。
+>
+> 4. **构建必须同时产出 wheel 与 sdist**：只构建 `--wheel` 会使
+>    `test_built_artifacts_contain_runtime_assets` **FAIL**（它要求 `dist/` 下两者齐备，
+>    这是 v1.0.1 的核心打包断言）。本轮实测复现该 FAIL，补建 sdist 后恢复 152/152。
 
 > **上述 ①–⑤ 全部针对最终 wheel**（`7af6c2d7…`）；`docs/audit/03` 与 `04` 中的端到端验证针对**源码树**，
 > 两者结论一致但对象不同。
