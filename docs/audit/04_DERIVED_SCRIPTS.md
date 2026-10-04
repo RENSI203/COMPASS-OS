@@ -83,7 +83,7 @@
 | 检查 | 结果 |
 |---|---|
 | 参数是否显式 | 4 个脚本有 `required=True` 的必要输入；`--out` 普遍存在 | **PASS** |
-| **硬编码个人目录** | **3 个工具**的 `--source-root` **默认值**为 `/home/rensi/projects/202608读书汇报`（`audit_duplicate_symbols` / `build_assets` / `build_fixtures`） | 见下 |
+| **硬编码个人目录** | **3 个工具**的 `--source-root` **默认值**为**开发机项目根绝对路径**（`audit_duplicate_symbols` / `build_assets` / `build_fixtures`；原文含用户名，此处按 §7.1 脱敏） | 见下 |
 | `--verify` 路径是否受影响 | **不受影响**：实测从 `/tmp` 运行 `tools/build_assets.py --verify` → `校验：13 项 ⇒ 异常 0`（`--source-root` 只在**重建**分支使用） | **PASS** |
 | 模型版本来源 | 全部经 `model_manifest.json` 的 `default_model`，**无硬编码模型名** | **PASS** |
 | 环境要求 | 需要 `MPLCONFIGDIR`（`~/.config` 不可写）；文档已记 | 记录 |
@@ -342,6 +342,30 @@ TypeError: 'NoneType' object is not subscriptable
 | 7 | `examples/quick_start.py` 无参数解析（`--help` 也执行） | 记录 | 示例属性；会写入仓库内 `examples/output/` |
 | 8 | 所有示例输出**固定在仓库内** `examples/output/` | 记录 | 只读 checkout 下无法运行；需可写工作副本 |
 | 9 | `validation/inputs/`（pheno、表达缓存）**未纳入候选**（gitignored） | **限制** | 干净 clone **无法**直接重建验证结果，必须自备输入；`validation/README.md` 已列出来源路径 |
+
+### 7.1 本阶段的自我命中与修复（与 Phase 0 §6.5 同类）
+
+**现象**：本文件初稿在 §2.1 表格中**逐字引用**了工具里那条开发机绝对路径作为证据，
+导致**本文件自身**被 `release_audit.py` 判为 `absolute-path` FAIL：
+
+```
+$ cd <pristine candidate worktree> && python tools/release_audit.py
+检查项 17：FAIL 1 / WARN 0
+=== FAIL ===
+absolute-path   docs/audit/04_DERIVED_SCRIPTS.md:86   ...   FAIL
+```
+
+**这是同一类错误的第二次发生**（Phase 0 §6.5 已记录过一次并写明教训：
+"在受 `absolute-path` 扫描的 `.md` 中引用此类证据时必须脱敏"）。
+本次未吸取该教训，**记录在案**。
+
+**修复**：把路径字面量改为文字描述（"开发机项目根绝对路径"），
+保留文件、位置与结论。检查本身、白名单与判定标准**均未改动**。
+
+**验证**：修复后在 pristine worktree 重跑 → **FAIL 0 / WARN 0**（16 项）。
+
+> **给后续阶段的硬性提醒**：`docs/audit/**.md` 一律**不得**出现机读绝对路径；
+> 引用证据时只写"开发机路径/用户名已被脱敏"，把原始字符串留给读者自行运行审计复现。
 
 ---
 
