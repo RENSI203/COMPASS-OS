@@ -2,7 +2,7 @@
 
 **阶段**：4 / 6（顺序发布审查）
 **日期**：2026-10-04
-**候选**：Phase 3 冻结 `75ee0cc` → **本阶段修复提交 `fcbfa46`**（§0.2）
+**候选**：Phase 3 冻结 `75ee0cc` → **本阶段末候选 `c5de83e`**（代码修复 `fcbfa46`，§0.2）
 **结论**：**PASS（含 2 处已修复缺陷、5 项未验证/限制）**；无 blocker
 
 > 本阶段未改动冻结分析方案、未为提高指标而修改任何定义。
@@ -31,16 +31,17 @@
 
 | 项 | Phase 3 | 本阶段 |
 |---|---|---|
-| 代码冻结点 | `75ee0cc` | **`fcbfa46`** |
+| 代码冻结点 | `75ee0cc` | **`c5de83e`**（脚本修复 `fcbfa46` + 审计记录/脱敏文档提交） |
 
 **已重跑**（clean worktree @ `fcbfa46`，未提交改动 0；**先 build 后 test**）：
 
 | 检查 | 结果 |
 |---|---|
-| 发布审计 | **FAIL 0 / WARN 0**（16 项） |
-| 全量测试 | **PASS 150 / FAIL 0 / SKIP 0** |
+| 发布审计（**pristine worktree，先于 build**） | **FAIL 0 / WARN 0**（16 项） |
+| 全量测试（**先 build 后 test**） | **PASS 150 / FAIL 0 / SKIP 0** |
+| 渲染层自检 | **12 / 12 OK** |
 | 冻结资产 | **13 项异常 0**（未变） |
-| wheel / sdist SHA256 | `0da7fb0e…` / `e672e0b4…`（§0.3） |
+| wheel / sdist SHA256 | 见 §0.3 |
 
 > ⚠️ 本阶段**亲自复现了 Phase 0 §5.7 的顺序依赖**：在 clean worktree 中先跑测试得到
 > `PASS 149 / SKIP 1`（缺 `dist/` ⇒ `test_built_artifacts_contain_runtime_assets` 跳过），
@@ -48,10 +49,16 @@
 
 ### 0.3 产物哈希
 
+在 pristine worktree（检出本阶段末候选 `c5de83e`）用
+`SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD)` 规范化构建：
+
 | 产物 | SHA256 |
 |---|---|
-| `compass_os-1.1.0-py3-none-any.whl` | `0da7fb0e2c51101f45d6d759fd1534753e148996a25ca49ccc813f3ef827e273` |
-| `compass_os-1.1.0.tar.gz` | `e672e0b47f79864e0948f64c8e52129d16525eae5f15e1ebbdd42efb539f0504` |
+| `compass_os-1.1.0-py3-none-any.whl` | `b905d8415c415102ac1306a219193f9f8f0799b79ffa23b67b700cd125e2ac60` |
+| `compass_os-1.1.0.tar.gz` | `5dfead16c066da7d0c715b3b874178fa0e0e17d09b745ab416b46e4c52a83655` |
+
+> Phase 3 记录的 wheel `fba9ee1…` 已被本阶段 `src/` 之外的脚本修复**取代**（`fcbfa46` 修改了
+> `examples/` 与 `validation/`，二者进 sdist）；第 2 阶段须对 `b905d84…` 在全新环境复验。
 
 ---
 
