@@ -371,13 +371,23 @@ def _clinical_fill_report(clinical, sample_ids, models) -> list:
     if not any(any(f in _surv.load_lock(m)["feature_names"] for f in ("Age", "Sex", "Stage"))
                for m in models):
         return []
-    clin = _surv._clinical_frame(clinical, sample_ids)
+    diag: dict = {}
+    clin = _surv._clinical_frame(clinical, sample_ids, diag=diag)
+    fill = _surv.load_lock(models[0])["clinical_fill"]
     out = []
     for f, nm in (("age", "Age"), ("sex", "Sex"), ("stage", "Stage")):
         k = int(clin[f].isna().sum())
         if k:
             out.append(f"{nm} {k}/{len(sample_ids)} samples (reference value "
-                   f"{_surv.load_lock(models[0])['clinical_fill'][nm]['fill']})")
+                   f"{fill[nm]['fill']})")
+        # 用户**提供了**却解析失败 => 编码错误，必须与"缺失"区分开报告
+        bad = int(diag.get(f, {}).get("n_unparseable", 0))
+        if bad:
+            out.append(
+                f"{nm}: {bad}/{len(sample_ids)} provided values could not be parsed as "
+                "numeric and were treated as missing. Clinical columns must be numeric "
+                "(age = years, stage = 1-4, sex = numeric code); e.g. Female/Male must be "
+                "encoded before calling.")
     return out
 
 

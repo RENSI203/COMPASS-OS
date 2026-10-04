@@ -104,12 +104,22 @@ def build_design_matrix(concept_scores: pd.DataFrame, clinical: pd.DataFrame | N
     return X[feats]
 
 
-def _clinical_frame(clinical: pd.DataFrame | None, idx: Sequence[str]) -> pd.DataFrame:
-    """标准化用户临床表（列名 ``age`` / ``sex`` / ``stage``；缺失 → NaN → 用锁定常数填）。"""
+def _clinical_frame(clinical: pd.DataFrame | None, idx: Sequence[str], *,
+                    diag: dict | None = None) -> pd.DataFrame:
+    """标准化用户临床表（列名 ``age`` / ``sex`` / ``stage``；缺失 -> NaN -> 用锁定常数填）。
+
+    **编码要求**：三列都必须是**数值**：``age`` = 岁，``stage`` = 1–4，
+    ``sex`` 必须已编码为数值（冻结模型按 0/1 使用）。
+    非数值内容（如 ``"Female"`` / ``"Male"``）无法解析 -> NaN -> 走冻结填补；
+    传入 ``diag`` 时会记录"用户提供了但解析失败"的个数，供上层给出明确警告，
+    避免把**编码错误**误报成"数据缺失"。
+    """
     out = pd.DataFrame(index=list(idx))
     if clinical is None:
         for f in CLINICAL_FIELDS:
             out[f] = np.nan
+            if diag is not None:
+                diag[f] = {"n_provided": 0, "n_unparseable": 0}
         return out
     if not isinstance(clinical, pd.DataFrame):
         raise InputError("clinical 必须是 DataFrame（index = sample_id）")
@@ -117,7 +127,17 @@ def _clinical_frame(clinical: pd.DataFrame | None, idx: Sequence[str]) -> pd.Dat
     clin.index = [str(i) for i in clin.index]
     clin = clin.reindex([str(i) for i in idx])
     for f in CLINICAL_FIELDS:
-        out[f] = pd.to_numeric(clin[f], errors="coerce") if f in clin.columns else np.nan
+        if f in clin.columns:
+            raw = clin[f]
+            num = pd.to_numeric(raw, errors="coerce")
+            out[f] = num
+            if diag is not None:
+                diag[f] = {"n_provided": int(raw.notna().sum()),
+                           "n_unparseable": int((raw.notna() & num.isna()).sum())}
+        else:
+            out[f] = np.nan
+            if diag is not None:
+                diag[f] = {"n_provided": 0, "n_unparseable": 0}
     # stage 只接受 1–4（生产口径：0/缺失 → NaN → 锁定常数）
     out["stage"] = out["stage"].where(out["stage"].between(1, 4), np.nan)
     return out

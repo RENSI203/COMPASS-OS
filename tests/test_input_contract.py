@@ -178,3 +178,41 @@ def test_counts_like_matrix_is_not_detectable():
     a = align_expression(counts, "reference")           # 不报错
     assert a.matrix.shape == (4, len(G))
     assert np.isfinite(a.matrix.to_numpy()).all()
+
+
+# ---------------------------------------------------------------- 临床编码
+def test_non_numeric_clinical_is_reported_as_encoding_error():
+    """用户**提供了**却无法解析的临床值必须与"缺失"区分开报告。"""
+    import compass_os
+    from compass_os.survival import _clinical_frame
+    e = _small()
+    idx = [str(i) for i in e.index]
+
+    # 诊断接口：记录"提供了但解析失败"的个数
+    diag = {}
+    _clinical_frame(pd.DataFrame({"age": [60.0] * 4, "sex": ["Female", "Male"] * 2,
+                                  "stage": [2.0] * 4}, index=idx), idx, diag=diag)
+    assert diag["sex"]["n_provided"] == 4 and diag["sex"]["n_unparseable"] == 4
+    assert diag["age"]["n_unparseable"] == 0
+
+    # 数值编码：不得报编码错误
+    diag2 = {}
+    _clinical_frame(pd.DataFrame({"age": [60.0] * 4, "sex": [0.0, 1.0] * 2,
+                                  "stage": [2.0] * 4}, index=idx), idx, diag=diag2)
+    assert diag2["sex"]["n_unparseable"] == 0
+
+    # 端到端：predict 的 warnings 必须点名"无法解析"
+    clin = pd.DataFrame({"age": [60.0] * 4, "sex": ["Female", "Male"] * 2,
+                         "stage": [2.0] * 4}, index=idx)
+    res = compass_os.predict(e, ["LUAD"] * 4, clinical=clin, model="M2")
+    assert any("could not be parsed" in w for w in res.warnings), \
+        "字符串 Sex 应产生编码告警而不是被静默当作缺失"
+
+
+def test_stage_out_of_range_falls_back_to_frozen_fill():
+    """stage 只接受 1–4；0 或越界 -> NaN -> 冻结填补（既有语义，锁定不变）。"""
+    from compass_os.survival import _clinical_frame
+    idx = ["a", "b", "c"]
+    out = _clinical_frame(pd.DataFrame({"age": [60.0] * 3, "sex": [0.0] * 3,
+                                        "stage": [0.0, 5.0, 2.0]}, index=idx), idx)
+    assert out["stage"].isna().tolist() == [True, True, False]
