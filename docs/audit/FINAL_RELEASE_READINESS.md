@@ -63,7 +63,7 @@
 | 冻结资产 | **13 项异常 0** |
 | 六类禁止声明扫描 | **全部未出现** |
 | 审查文档机读路径守卫 | **PASS**（新增 2 项测试） |
-| wheel / sdist SHA256 | `39051540…` / `0343aab1…` |
+| wheel / sdist SHA256 | `188eba11…` / `9859f22d…`（**最终**，见 §3.1） |
 | README 复现数字独立实测 | **1.110e-16 / 2.372e-07 / 1.060e-06**（判据 1e-5）**PASS** |
 | README 覆盖度数字独立重算 | **完全吻合** |
 
@@ -75,6 +75,25 @@
 ```bash
 SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 ```
+
+### 3.1 最终分发包验收（针对**最终 wheel**，非源码树）
+
+| 项 | 值 / 结果 |
+|---|---|
+| 构建来源 | clean worktree `/tmp/gh_audit/rel`，检出最终候选，未提交改动 **0** |
+| `compass_os-1.1.0-py3-none-any.whl` | **`188eba11d3324a2f359ea88160957d956a232f5c4f260f70fbbffa3d9ef1da8b`** |
+| `compass_os-1.1.0.tar.gz` | **`9859f22d7499a7d3f27fb63be2187c73e66e06d9bd2ab991e961be145822e3a5`** |
+| 全新环境 | `venv --system-site-packages`，`pip install --no-deps --no-cache-dir --force-reinstall <wheel>` |
+| **源码遮蔽检查** | 实际加载路径 = `…/relenv/lib/python3.12/site-packages/compass_os/__init__.py`；`sys.path` **不含**仓库 `src/`；基础环境**无**竞争安装 |
+| ① 核心预测 | ✅ `predict(model="M2,M3")` 返回 `['M2','M3']` |
+| ② `sample_path` | ✅ 12 concepts + Age/Sex/Stage/PC1–PC10 |
+| ③ 资产定位 | ✅ 从**已安装包内**解析 `compass_os/assets/models/qc_config.json` |
+| ④ HTML/PNG/PDF(+SVG) 导出 | ✅ 四种格式均生成；**HTML 内嵌 == PNG 字节** |
+| ⑤ 数值自洽 | ✅ 图中 η == 主 API；完整分解 `sum == η` |
+| 运行位置 | 仓库外（`/tmp/gh_audit/reltest`），仅依赖 wheel + 外部表达缓存 |
+
+> **上述 ①–⑤ 全部针对最终 wheel**；`docs/audit/03` 与 `04` 中的端到端验证针对**源码树**，
+> 两者结论一致但对象不同。
 
 ---
 
@@ -185,10 +204,30 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 | 1 | 按"先 build 后 test"重建并记录最终 wheel/sdist SHA256 | 发布流程 |
 | 2 | 在**全新环境**安装最终 wheel 并跑端到端（Phase 0 遗留） | 发布流程 |
 | 3 | `CITATION.cff` 的 `date-released` 改为**实际**发布日期 | 发布流程 |
-| 4 | 更新 `paper_assets/MANUSCRIPT_NUMBERS.tsv` 的 `software_version` / `tag` / `commit` / `wheel_sha256` / `sdist_sha256` | **并行工作区**（非本候选） |
+| 4 | ~~更新 `paper_assets/MANUSCRIPT_NUMBERS.tsv`~~ | **本轮已完成**（§3.2） |
 | 5 | 决定是否补充**绝对生存校准**证据（超出本轮既定范围） | 需用户决定 |
 | 6 | 若写入高低风险免疫程序类声明，**单独**做 outcome-conditioned selection 审查 | 需用户决定 |
 | 7 | 决定 sdist 字节可重复性：pin 构建后端 或 正式接受并改用 content-sha256 | 第 2 阶段遗留 |
+
+---
+
+### 3.2 论文元数据同步（本轮已授权并完成）
+
+`paper_assets/MANUSCRIPT_NUMBERS.tsv` 已与最终候选对齐：
+
+| 字段 | 原值 | 新值 |
+|---|---|---|
+| 逐行 `software_version`（68 行） | `1.0.1` | **`1.1.0`** |
+| `software_version` | `1.0.1` | **`1.1.0`** |
+| `software_release_tag` | `v1.0.1` | **`planned (unreleased)`** —— tag **未创建**，不得当作已发布 |
+| `software_release_commit` | `7270935…` | **`4ea61a906fb3c0aa1004fb87f10674b7a7ebafff`** |
+| `software_release_date` | `2026-10-03` | **`planned (unreleased)`** |
+| `wheel_sha256` | `13c9b438…` | **`188eba11d3324a2f359ea88160957d956a232f5c4f260f70fbbffa3d9ef1da8b`** |
+| `sdist_sha256` | `550e04c1…` | **`9859f22d7499a7d3f27fb63be2187c73e66e06d9bd2ab991e961be145822e3a5`** |
+| `scientific_asset_version` | `1.0.0` | **`1.0.0`（不变）** |
+
+**说明**：该文件属**论文资产**，**不在软件候选内**（`MANIFEST.in` 不收录 `paper_assets/`），
+因此更新它**不会使 wheel 失效**；其余无关并行修改**原样保留**。
 
 ---
 

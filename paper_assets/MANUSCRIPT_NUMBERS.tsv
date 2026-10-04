@@ -1,42 +1,69 @@
-metric_id	value	unit	analysis	source_file	source_columns	software_version	validation_version	notes
-external_cohorts_recoverable	38	cohorts	platform mask extraction (pre-imputation)	validation/results/external_coverage_summary.tsv	status=='ok'	1.0.0	1.0.0	METABRIC 不可还原（非 GEO 平台）
-external_cohorts_total	39	cohorts	same	validation/results/external_coverage_summary.tsv	all rows	1.0.0	1.0.0	
-external_samples	9359	samples	harmonised external cohorts	validation/inputs/pheno.tsv	rows	1.0.0	1.0.0	
-median_global_coverage	0.9668	fraction	external cohorts, pre-imputation	validation/results/external_coverage_summary.tsv	global_gene_coverage median	1.0.0	1.0.0	
-global_coverage_range	0.635-0.980	fraction	same	validation/results/external_coverage_summary.tsv	global_gene_coverage min/max	1.0.0	1.0.0	
-median_Gsig_coverage	0.9618	fraction	external cohorts, pre-imputation	validation/results/external_coverage_summary.tsv	Gsig_coverage median	1.0.0	1.0.0	
-Gsig_coverage_range	0.803-0.978	fraction	same	validation/results/external_coverage_summary.tsv	Gsig_coverage min/max	1.0.0	1.0.0	
-recommended_global_coverage	0.9	fraction	QC calibration	models/qc_config.json	recommended_global_coverage	1.0.0	1.0.0	
-warning_global_coverage	0.7	fraction	QC calibration	models/qc_config.json	warning_global_coverage	1.0.0	1.0.0	
-recommended_Gsig_coverage	0.9	fraction	QC calibration	models/qc_config.json	recommended_Gsig_coverage	1.0.0	1.0.0	
-warning_Gsig_coverage	0.7	fraction	QC calibration	models/qc_config.json	warning_Gsig_coverage	1.0.0	1.0.0	
-global_mask5_risk_spearman	0.9863	Spearman r	global random masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=global, level=0.05, strategy=reference, risk_spearman_median	1.0.0	1.0.0	
-global_mask10_risk_spearman	0.9593	Spearman r	global random masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=global, level=0.1, strategy=reference, risk_spearman_median	1.0.0	1.0.0	
-global_mask20_risk_spearman	0.923	Spearman r	global random masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=global, level=0.2, strategy=reference, risk_spearman_median	1.0.0	1.0.0	
-global_mask30_risk_spearman	0.8449	Spearman r	global random masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=global, level=0.3, strategy=reference, risk_spearman_median	1.0.0	1.0.0	
-global_mask40_risk_spearman	0.7928	Spearman r	global random masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=global, level=0.4, strategy=reference, risk_spearman_median	1.0.0	1.0.0	
-global_mask50_risk_spearman	0.7413	Spearman r	global random masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=global, level=0.5, strategy=reference, risk_spearman_median	1.0.0	1.0.0	
-nonGsig_mask5_risk_spearman	1.0	Spearman r	non-signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=non_sig, level=0.05, risk_spearman_median	1.0.0	1.0.0	
-nonGsig_mask10_risk_spearman	1.0	Spearman r	non-signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=non_sig, level=0.1, risk_spearman_median	1.0.0	1.0.0	
-nonGsig_mask20_risk_spearman	0.9999	Spearman r	non-signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=non_sig, level=0.2, risk_spearman_median	1.0.0	1.0.0	
-nonGsig_mask30_risk_spearman	0.9999	Spearman r	non-signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=non_sig, level=0.3, risk_spearman_median	1.0.0	1.0.0	
-nonGsig_mask40_risk_spearman	0.9998	Spearman r	non-signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=non_sig, level=0.4, risk_spearman_median	1.0.0	1.0.0	
-nonGsig_mask50_risk_spearman	0.9998	Spearman r	non-signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=non_sig, level=0.5, risk_spearman_median	1.0.0	1.0.0	
-Gsig_mask1_risk_spearman	0.9987	Spearman r	signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=signature, level=0.01, risk_spearman_median	1.0.0	1.0.0	signature-gene coverage = 0.99
-Gsig_mask2_risk_spearman	0.9961	Spearman r	signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=signature, level=0.02, risk_spearman_median	1.0.0	1.0.0	signature-gene coverage = 0.98
-Gsig_mask5_risk_spearman	0.9827	Spearman r	signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=signature, level=0.05, risk_spearman_median	1.0.0	1.0.0	signature-gene coverage = 0.95
-Gsig_mask10_risk_spearman	0.9643	Spearman r	signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=signature, level=0.1, risk_spearman_median	1.0.0	1.0.0	signature-gene coverage = 0.90
-Gsig_mask20_risk_spearman	0.924	Spearman r	signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=signature, level=0.2, risk_spearman_median	1.0.0	1.0.0	signature-gene coverage = 0.80
-Gsig_mask30_risk_spearman	0.849	Spearman r	signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=signature, level=0.3, risk_spearman_median	1.0.0	1.0.0	signature-gene coverage = 0.70
-golden_132_max_abs_delta	1.1e-16	absolute	golden reproducibility	tests/fixtures/golden_provenance.json	132 signature vs production path	1.0.0	1.0.0	
-golden_43_max_abs_delta	2.4e-07	absolute	golden reproducibility	tests/fixtures/golden_provenance.json	43 concept vs original 04 archive	1.0.0	1.0.0	
-golden_risk_max_abs_delta	1.06e-06	absolute	golden reproducibility	tests/fixtures/golden_provenance.json	M0-M3 risk vs production	1.0.0	1.0.0	
-delta_uno_max_abs_median	0.0188746792207714	Uno C	global masking, all levels	validation/results/stress_pancohort_summary.tsv	|delta_uno_median| max	1.0.0	1.0.0	
-gsig_genes	916	genes	signature gene set	src/compass_os/data/concept_gene_sets.tsv	unique symbols	1.0.0	1.0.0	
-nonsig_genes	14756	genes	G_all - G_sig	validation/run_missing_gene_validation.py	computed at runtime	1.0.0	1.0.0	15,672 - 916
-vocabulary_genes	15672	genes	COMPASS vocabulary	src/compass_os/data/gene_vocabulary.txt	lines	1.0.0	1.0.0	zero duplicate symbols
-software_version	1.0.1	version	software release	paper_assets/SOFTWARE_PROVENANCE.tsv	release:* rows	1.0.0	1.0.0	COMPASS-OS
-software_repository_url	https://github.com/RENSI203/COMPASS-OS	URL	software release	paper_assets/SOFTWARE_PROVENANCE.tsv	release:* rows	1.0.0	1.0.0	Software Availability
-software_release_commit	3f2aeadf18770e4f88faaa5991b654763d2f3f6f	git SHA	software release	paper_assets/SOFTWARE_PROVENANCE.tsv	release:* rows	1.0.0	1.0.0	tag target
-software_release_date	2026-10-03	date	software release	paper_assets/SOFTWARE_PROVENANCE.tsv	release:* rows	1.0.0	1.0.0	tag push date
-software_version	1.0.1	version	software release	paper_assets/SOFTWARE_PROVENANCE.tsv	release:* rows	1.0.1	1.0.0	v1.0.1 bug-fix release (v1.0.0 tag unchanged)
+metric_id	value	unit	analysis	source_file	source_columns	software_version	scientific_asset_version	reuse_status	notes
+external_cohorts_recoverable	38	cohorts	platform mask extraction (pre-imputation)	validation/results/external_coverage_summary.tsv	status=='ok'	1.1.0	1.0.0	reused unchanged (frozen scientific assets byte-identical)	METABRIC not recoverable (non-GEO platform)
+external_cohorts_total	39	cohorts	same	validation/results/external_coverage_summary.tsv	all rows	1.1.0	1.0.0	reused unchanged	38 GEO + METABRIC; two different denominators, state both
+external_samples	9359	samples	harmonised external cohorts	scripts_dev/analysis_out_clinical_utility/per_cancer_external_cohortlevel.tsv	sum(n)	1.1.0	1.0.0	reused unchanged	independently re-summed in this audit
+external_events	4754	events	same	scripts_dev/analysis_out_clinical_utility/per_cancer_external_cohortlevel.tsv	sum(events)	1.1.0	1.0.0	reused unchanged	independently re-summed in this audit
+median_global_coverage	0.9668	fraction	external cohorts, pre-imputation	validation/results/external_coverage_summary.tsv	global_gene_coverage median over status=='ok'	1.1.0	1.0.0	reused unchanged	recomputed = 0.966820
+global_coverage_range	0.635-0.980	fraction	same	validation/results/external_coverage_summary.tsv	global_gene_coverage min/max	1.1.0	1.0.0	reused unchanged	recomputed
+median_Gsig_coverage	0.9618	fraction	external cohorts, pre-imputation	validation/results/external_coverage_summary.tsv	Gsig_coverage median over status=='ok'	1.1.0	1.0.0	reused unchanged	recomputed = 0.961790
+Gsig_coverage_range	0.803-0.978	fraction	same	validation/results/external_coverage_summary.tsv	Gsig_coverage min/max	1.1.0	1.0.0	reused unchanged	recomputed
+recommended_global_coverage	0.9	fraction	QC calibration	src/compass_os/assets/models/qc_config.json	recommended_global_coverage	1.1.0	1.0.0	reused unchanged	frozen config; SHA-256 pinned
+warning_global_coverage	0.7	fraction	QC calibration	src/compass_os/assets/models/qc_config.json	warning_global_coverage	1.1.0	1.0.0	reused unchanged	frozen config
+recommended_Gsig_coverage	0.9	fraction	QC calibration	src/compass_os/assets/models/qc_config.json	recommended_Gsig_coverage	1.1.0	1.0.0	reused unchanged	frozen config; aggregate signature-gene axis
+warning_Gsig_coverage	0.7	fraction	QC calibration	src/compass_os/assets/models/qc_config.json	warning_Gsig_coverage	1.1.0	1.0.0	reused unchanged	frozen config; aggregate signature-gene axis
+per_signature_coverage_threshold	NOT CALIBRATED / NOT RELEASED	-	QC calibration	src/compass_os/assets/models/qc_config.json	signature_coverage_warning_threshold=null	1.1.0	1.0.0	reused unchanged	per-signature (n x 132) coverage is reported as a continuous value only; no numeric threshold exists and none may be invented
+global_mask5_risk_spearman	0.9863	Spearman r	global random masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=global, level=0.05, strategy=reference, risk_spearman_median	1.1.0	1.0.0	reused unchanged	
+global_mask10_risk_spearman	0.9593	Spearman r	global random masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=global, level=0.1, strategy=reference	1.1.0	1.0.0	reused unchanged	
+global_mask20_risk_spearman	0.923	Spearman r	global random masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=global, level=0.2, strategy=reference	1.1.0	1.0.0	reused unchanged	
+global_mask30_risk_spearman	0.8449	Spearman r	global random masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=global, level=0.3, strategy=reference	1.1.0	1.0.0	reused unchanged	
+global_mask40_risk_spearman	0.7928	Spearman r	global random masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=global, level=0.4, strategy=reference	1.1.0	1.0.0	reused unchanged	
+global_mask50_risk_spearman	0.7413	Spearman r	global random masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=global, level=0.5, strategy=reference	1.1.0	1.0.0	reused unchanged	
+nonGsig_mask5_risk_spearman	1.0	Spearman r	non-signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=non_sig, level=0.05	1.1.0	1.0.0	reused unchanged	
+nonGsig_mask10_risk_spearman	1.0	Spearman r	non-signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=non_sig, level=0.1	1.1.0	1.0.0	reused unchanged	
+nonGsig_mask20_risk_spearman	0.9999	Spearman r	non-signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=non_sig, level=0.2	1.1.0	1.0.0	reused unchanged	
+nonGsig_mask30_risk_spearman	0.9999	Spearman r	non-signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=non_sig, level=0.3	1.1.0	1.0.0	reused unchanged	
+nonGsig_mask40_risk_spearman	0.9998	Spearman r	non-signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=non_sig, level=0.4	1.1.0	1.0.0	reused unchanged	
+nonGsig_mask50_risk_spearman	0.9998	Spearman r	non-signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=non_sig, level=0.5	1.1.0	1.0.0	reused unchanged	
+Gsig_mask1_risk_spearman	0.9987	Spearman r	signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=signature, level=0.01	1.1.0	1.0.0	reused unchanged	signature-gene coverage = 0.99
+Gsig_mask2_risk_spearman	0.9961	Spearman r	signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=signature, level=0.02	1.1.0	1.0.0	reused unchanged	signature-gene coverage = 0.98
+Gsig_mask5_risk_spearman	0.9827	Spearman r	signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=signature, level=0.05	1.1.0	1.0.0	reused unchanged	signature-gene coverage = 0.95
+Gsig_mask10_risk_spearman	0.9643	Spearman r	signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=signature, level=0.1	1.1.0	1.0.0	reused unchanged	signature-gene coverage = 0.90
+Gsig_mask20_risk_spearman	0.924	Spearman r	signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=signature, level=0.2	1.1.0	1.0.0	reused unchanged	signature-gene coverage = 0.80
+Gsig_mask30_risk_spearman	0.849	Spearman r	signature-only masking, reference	validation/results/stress_pancohort_summary.tsv	mask_type=signature, level=0.3	1.1.0	1.0.0	reused unchanged	signature-gene coverage = 0.70
+delta_uno_max_abs_median	0.0188746792207714	Uno C	global masking, all levels	validation/results/stress_pancohort_summary.tsv	|delta_uno_median| max	1.1.0	1.0.0	reused unchanged	masking-induced CHANGE in Uno C, NOT absolute performance
+gsig_genes	916	genes	signature gene set	src/compass_os/data/concept_gene_sets.tsv	unique symbols	1.1.0	1.0.0	reused unchanged	independently recomputed in this audit
+nonsig_genes	14756	genes	G_all - G_sig	src/compass_os/data/gene_vocabulary.txt	15672 - 916	1.1.0	1.0.0	reused unchanged	independently recomputed
+vocabulary_genes	15672	genes	COMPASS vocabulary	src/compass_os/data/gene_vocabulary.txt	lines	1.1.0	1.0.0	reused unchanged	zero duplicate symbols
+external_M0_evaluable_cohorts	24	cohorts	external zero-refit ablation subset	scripts_dev/analysis_out_clinical_utility/per_cancer_external_cohortlevel.tsv	M0可评估=='True'	1.1.0	1.0.0	reused unchanged	15 cohorts excluded by the >=10-unique-M0-risk guard (8 have a constant M0 risk)
+external_M0_unoC_median	0.5948352692766761	Uno C	external zero-fit, 24 M0-evaluable cohorts	output/model_freeze/表_最终模型性能总表.tsv	UnoC_M0(中位)	1.1.0	1.0.0	reused unchanged	independently recomputed exactly
+external_M1_unoC_median	0.5215394771220307	Uno C	same	output/model_freeze/表_最终模型性能总表.tsv	UnoC_M1(中位)	1.1.0	1.0.0	reused unchanged	independently recomputed exactly
+external_M2_unoC_median	0.5776330838949854	Uno C	same	output/model_freeze/表_最终模型性能总表.tsv	UnoC_M2(中位)	1.1.0	1.0.0	reused unchanged	frozen primary model; independently recomputed exactly
+external_M3_unoC_median	0.5830782163034567	Uno C	same	output/model_freeze/表_最终模型性能总表.tsv	UnoC_M3(中位)	1.1.0	1.0.0	reused unchanged	independently recomputed exactly
+external_delta_M2_minus_M0_DL	0.008075129741771147	Uno C	same, paired per-cohort Delta, DL random effects	output/model_freeze/表_最终模型性能总表.tsv	Δ_M2−M0(DL)	1.1.0	1.0.0	reused unchanged	NOT SIGNIFICANT: 95% CI crosses zero
+external_delta_M2_minus_M0_CI	[-0.0039, +0.0200]	Uno C	95% CI	output/model_freeze/表_最终模型性能总表.tsv	Δ_M2−M0_CI	1.1.0	1.0.0	reused unchanged	must be reported whenever the M2−M0 gain is mentioned
+external_delta_M2_minus_M0_median	0.0140831963059935	Uno C	same, median of per-cohort paired Delta	output/model_freeze/表_最终模型性能总表.tsv	Δ_M2−M0(中位)	1.1.0	1.0.0	reused unchanged	16/24 cohorts positive
+external_delta_M1_minus_M0_DL	-0.0494567686213906	Uno C	same	output/model_freeze/表_最终模型性能总表.tsv	Δ_M1−M0(DL)	1.1.0	1.0.0	reused unchanged	SIGNIFICANTLY WORSE than the clinical baseline
+external_delta_M1_minus_M0_CI	[-0.0829, -0.0160]	Uno C	95% CI	output/model_freeze/表_最终模型性能总表.tsv	Δ_M1−M0_CI	1.1.0	1.0.0	reused unchanged	concepts-only arm
+external_delta_M3_minus_M0_DL	0.01163835565829873	Uno C	same	output/model_freeze/表_最终模型性能总表.tsv	Δ_M3−M0(DL)	1.1.0	1.0.0	reused unchanged	NOT SIGNIFICANT
+external_delta_M3_minus_M2_DL	0.0016807034502093806	Uno C	same	output/model_freeze/表_最终模型性能总表.tsv	Δ_M3−M2(DL)	1.1.0	1.0.0	reused unchanged	NOT SIGNIFICANT
+external_delta_ssGSEA43_minus_M2_DL	0.0013800630640117553	Uno C	same, positive control vs frozen primary	output/model_freeze/表_最终模型性能总表.tsv	Δ_B1M2−CM2(DL)	1.1.0	1.0.0	reused unchanged	NOT SIGNIFICANT: a plain ssGSEA scoring of the same gene sets is statistically indistinguishable from the COMPASS representation externally
+internal_delta_M2_minus_M0_DL	0.016459415025100076	Uno C	internal TCGA random test, within-cancer, 18 cancers, 3 seeds	output/model_freeze/表_最终模型性能总表.tsv	Δ_M2−M0(DL)	1.1.0	1.0.0	reused unchanged	NOT SIGNIFICANT: CI [-0.0053, +0.0382]
+internal_cohort_note	same 9430 patients were refit into the frozen heads	-	provenance	data_tcga/processed/locked_model/_final_split.json	train=9430, val=0, test=0	1.1.0	1.0.0	reused unchanged	TCGA has NO held-out samples; in-domain numbers are resubstitution, not validation
+stratification_transport_M2_two_sided	26	cohorts	frozen pan-cancer cutoff transport	paper_assets/tables/TableS_stratification_transport.tsv	model=M2, two_sided==True	1.1.0	1.0.0	new in this audit	26/39 = 66.7% of cohorts can be split at all
+stratification_transport_M2_not_splittable	13	cohorts	same	paper_assets/tables/TableS_stratification_transport.tsv	model=M2, two_sided==False	1.1.0	1.0.0	new in this audit	13/39 = 33.3%; 9 all-above + 4 all-below
+stratification_transport_M2_adequate	18	cohorts	same	paper_assets/tables/TableS_stratification_transport.tsv	model=M2, min_group_size>=10	1.1.0	1.0.0	new in this audit	"non-empty is not the same as ""adequate for a log-rank test"""
+frozen_risk_path_max_abs_delta_M0	1.11e-16	absolute	independent NumPy re-derivation of risk = Xbeta	paper_assets/audit/frozen_risk_path_recheck.tsv	model=M0, max_abs_delta	1.1.0	1.0.0	new in this audit	offline, no torch, no compass_os import
+frozen_risk_path_max_abs_delta_M1	2.22e-16	absolute	same	paper_assets/audit/frozen_risk_path_recheck.tsv	model=M1	1.1.0	1.0.0	new in this audit	
+frozen_risk_path_max_abs_delta_M2	8.88e-16	absolute	same	paper_assets/audit/frozen_risk_path_recheck.tsv	model=M2	1.1.0	1.0.0	new in this audit	frozen primary
+frozen_risk_path_max_abs_delta_M3	5.00e-16	absolute	same (includes the locked PCA on log2(TPM+1))	paper_assets/audit/frozen_risk_path_recheck.tsv	model=M3	1.1.0	1.0.0	new in this audit	
+asset_manifest_hashes_verified	13/13	assets	recompute ASSET_MANIFEST.tsv with its own tree-hash algorithm	ASSET_MANIFEST.tsv	sha256 column	1.1.0	1.0.0	new in this audit	0 mismatches, all file sizes match
+frozen_scientific_assets_v100_vs_v101	byte-identical	-	git blob comparison of the frozen scientific assets	git v1.0.0 vs v1.0.1	blob SHAs	1.1.0	1.0.0	new in this audit	pretrainer.pt, locked_M0-M3.json, locked_pca_M3.npz, qc_config.json, reference_quantiles.json, all 52 third_party files; only model_manifest.json differs and only in path strings
+wheel_assets_match_repo	13/13	assets	SHA-256 of wheel members vs repo files	dist/compass_os-1.0.1-py3-none-any.whl	members under compass_os/assets/ and compass_os/data/	1.1.0	1.0.0	new in this audit	no .pyc shipped; LICENSE and NOTICE present
+wheel_sha256	188eba11d3324a2f359ea88160957d956a232f5c4f260f70fbbffa3d9ef1da8b	SHA-256	release artifact	dist/compass_os-1.0.1-py3-none-any.whl	-	1.1.0	1.0.0	new in this audit	final candidate wheel; built with SOURCE_DATE_EPOCH=<commit time>; verified in a fresh venv outside the repo
+sdist_sha256	9859f22d7499a7d3f27fb63be2187c73e66e06d9bd2ab991e961be145822e3a5	SHA-256	release artifact	dist/compass_os-1.0.1.tar.gz	-	1.1.0	1.0.0	new in this audit	final candidate sdist; byte hash is build-specific (directory mtimes); wheel is the reproducible artifact
+software_version	1.1.0	version	software release	paper_assets/SOFTWARE_PROVENANCE.tsv	release rows	1.1.0	1.0.0	reused unchanged	software release (this candidate)
+software_repository_url	https://github.com/RENSI203/COMPASS-OS	URL	software release	paper_assets/SOFTWARE_PROVENANCE.tsv	release rows	1.1.0	1.0.0	reused unchanged	Software Availability
+software_release_tag	planned (unreleased)	tag	software release	git refs/tags/v1.0.1	annotated tag object 7e5d40c1c3066b6519e1ddb1e6ebe6b3457de7ed	1.1.0	1.0.0	reused unchanged	v1.1.0 tag NOT created; do not cite as released
+software_release_commit	4ea61a906fb3c0aa1004fb87f10674b7a7ebafff	git SHA	software release	git rev-parse v1.0.1^{}	tag target	1.1.0	1.0.0	reused unchanged	candidate commit on branch feature/sample-sankey; not merged/pushed
+software_release_date	planned (unreleased)	date	software release	git cat-file -p refs/tags/v1.0.1	tagger date 2026-10-03T15:45:26Z	1.1.0	1.0.0	reused unchanged	no release date; update at actual release
+scientific_asset_version	1.0.0	version	frozen scientific assets	paper_assets/SOFTWARE_PROVENANCE.tsv	scientific asset rows	1.1.0	1.0.0	reused unchanged	separate axis from software_version; see SOFTWARE_PROVENANCE.tsv

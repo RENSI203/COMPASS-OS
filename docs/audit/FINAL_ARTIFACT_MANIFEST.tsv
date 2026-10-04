@@ -1,0 +1,3 @@
+artifact	sha256	bytes	built_from_commit	notes
+compass_os-1.1.0-py3-none-any.whl	188eba11d3324a2f359ea88160957d956a232f5c4f260f70fbbffa3d9ef1da8b	15871951	4ea61a906fb3c0aa1004fb87f10674b7a7ebafff	final candidate wheel; byte-reproducible with SOURCE_DATE_EPOCH=<commit time>; verified in fresh venv outside repo
+compass_os-1.1.0.tar.gz	9859f22d7499a7d3f27fb63be2187c73e66e06d9bd2ab991e961be145822e3a5	16746755	4ea61a906fb3c0aa1004fb87f10674b7a7ebafff	final candidate sdist; byte hash is build-specific (setuptools stamps directory mtimes); wheel is the reproducible artifact
