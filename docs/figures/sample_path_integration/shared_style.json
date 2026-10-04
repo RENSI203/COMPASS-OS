@@ -1,0 +1,36 @@
+{
+ "gene_threshold": 0.25,
+ "max_genes": 32,
+ "max_signatures": 26,
+ "predictor_budget": 16,
+ "max_gene_edges_per_signature": 4,
+ "width": 17.5,
+ "height": 10.4,
+ "dpi": 160,
+ "gene_radius": 3.0,
+ "signature_radius": 4.2,
+ "predictor_radius": 6.0,
+ "line_width": 0.45,
+ "line_color": "#9bafbf",
+ "line_alpha": 0.32,
+ "expression_limits": [
+  0.0,
+  1704.3
+ ],
+ "gene_score_limits": [
+  -2.0,
+  2.0
+ ],
+ "signature_limits": [
+  -1.0,
+  1.0
+ ],
+ "concept_limits": [
+  -1.0,
+  1.0
+ ],
+ "contribution_limits": [
+  -1.5,
+  1.5
+ ]
+}

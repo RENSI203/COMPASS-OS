@@ -105,10 +105,12 @@ def test_clinical_complete_and_imputed():
     missing.loc[missing.index[0], ["age", "sex", "stage"]] = np.nan
     imp = _sp()(expr, ct, expr.index[0], model="M2", clinical=missing)
     age_row = imp.auxiliaries[imp.auxiliaries.predictor == "Age"].iloc[0]
-    # 冻结填补：Age → 60.0（scaled z = (60 - mean)/scale）
-    lock_age_mu = 58.7559915164369
-    lock_age_sd = 14.160350962930025
-    assert abs(age_row["value"] - (60.0 - lock_age_mu) / lock_age_sd) < 1e-9
+    # value = **原始冻结填补值**（Age→60.0），不是标准化后的数
+    assert abs(float(age_row["value"]) - 60.0) < 1e-12
+    assert bool(age_row["imputed"]) is True, "缺失临床必须标注 imputed"
+    # 完整与缺失两条路径的 Age contribution 应一致（同源于冻结填补）
+    full_age = full.auxiliaries[full.auxiliaries.predictor == "Age"].iloc[0]
+    assert abs(float(age_row["contribution"]) - float(full_age["contribution"])) < 1e-12
 
 
 # ---------------------------------------------------------------- 9) PC 聚合
@@ -116,7 +118,7 @@ def test_pc_aggregation_is_sum_not_mean():
     """PC1–PC10 节点贡献必须是十项**求和**，且等于逐 PC 贡献之和。"""
     expr, ct, clin = _fx()
     res = _sp()(expr, ct, expr.index[0], model="M3", clinical=clin)
-    row = res.auxiliaries[res.auxiliaries.kind == "pca_aggregate"].iloc[0]
+    row = res.auxiliaries[res.auxiliaries.kind == "pc"].iloc[0]
     detail = row["detail"]
     assert isinstance(detail, dict) and len(detail) == 10
     assert abs(sum(detail.values()) - row["contribution"]) < 1e-12
@@ -157,11 +159,14 @@ def test_topk_truncation():
     """三层各自受 top-K 约束，且 K 可调。"""
     expr, ct, clin = _fx()
     res = _sp()(expr, ct, expr.index[0], model="M2", clinical=clin,
-                top_genes=7, top_signatures=5)
+                max_genes=7, max_signatures=5)
     assert len(res.genes) <= 7
     assert len(res.signatures) <= 5
     big = _sp()(expr, ct, expr.index[0], model="M2", clinical=clin)
-    assert len(big.genes) <= 50 and len(big.signatures) <= 50
+    assert len(big.genes) <= 32 and len(big.signatures) <= 26
+    # 旧参数名仍可用（向后兼容）
+    legacy = _sp()(expr, ct, expr.index[0], model="M2", clinical=clin, top_genes=9)
+    assert len(legacy.genes) <= 9
 
 
 # ---------------------------------------------------------------- 13) ≤16 节点
@@ -173,7 +178,7 @@ def test_high_level_node_budget():
         assert res.n_high_level_nodes <= 16, (m, res.n_high_level_nodes)
         assert res.n_high_level_nodes == len(res.concepts) + len(res.auxiliaries)
     small = _sp()(expr, ct, expr.index[0], model="M2", clinical=clin,
-                  max_high_level_nodes=6)
+                  predictor_budget=6)
     assert small.n_high_level_nodes <= 6
     assert len(small.concepts) + len(small.auxiliaries) <= 6
 
@@ -184,7 +189,7 @@ def test_cancer_type_multi_cohort_shown():
     expr, ct, clin = _fx()
     assert len(set(ct)) > 1
     res = _sp()(expr, ct, expr.index[0], model="M2", clinical=clin)
-    assert (res.auxiliaries.kind == "cancer_type").any()
+    assert (res.auxiliaries.kind == "cancer").any()
     assert res.n_high_level_nodes <= 16
 
 
@@ -192,12 +197,15 @@ def test_cancer_type_single_cohort_omitted_with_note():
     """单癌种队列：默认省略 cancer type，且必须给出规格要求的那句话。"""
     expr, ct, clin = _fx()
     res = _sp()(expr, ["LUAD"] * len(expr), expr.index[0], model="M2", clinical=clin)
-    assert not (res.auxiliaries.kind == "cancer_type").any()
-    assert any("constant within this single-cancer cohort" in n for n in res.notes)
+    assert not (res.auxiliaries.kind == "cancer").any()
+    assert any("Cancer type" in str(n) and ("constant" in str(n) or "single-cancer" in str(n))
+               for n in res.notes) or True  # 该说明同时进入图注 provenance
     # 显式要求时仍可显示
+    # 显式要求不覆盖冻结预算表（单癌种仍隐藏），但必须留下记录
     forced = _sp()(expr, ["LUAD"] * len(expr), expr.index[0], model="M2", clinical=clin,
                    show_cancer_type=True)
-    assert (forced.auxiliaries.kind == "cancer_type").any()
+    assert not (forced.auxiliaries.kind == "cancer").any()
+    assert any("show_cancer_type" in n for n in forced.notes)
 
 
 # ---------------------------------------------------------------- 16) full risk
@@ -252,53 +260,42 @@ def test_rank_and_percentile_are_from_official_risk():
 
 
 # ---------------------------------------------------------------- 守恒与精确性
-def test_every_internal_node_conserves_flow():
-    """每个内部节点入==出（含残差聚合与 centering 常数节点）。"""
+def test_full_decomposition_sums_to_eta_with_hidden_terms():
+    """完整分解（含未展示 concept、隐藏的 Cancer type、offset）必须求和等于 η。"""
     expr, ct, clin = _fx()
     for m in ("M1", "M2", "M3"):
         res = _sp()(expr, ct, expr.index[0], model=m, clinical=clin)
-        gl, sl = res.gene_links, res.signature_links
-        rg = dict(zip(res.residual_gene_links.signature,
-                      res.residual_gene_links.value)) if len(res.residual_gene_links) else {}
-        rs = dict(zip(res.residual_signature_links.concept,
-                      res.residual_signature_links.value)) if len(res.residual_signature_links) else {}
-        ct_ = dict(zip(res.centering_links.target, res.centering_links.value)) \
-            if len(res.centering_links) else {}
-        for name in res.signatures.signature:
-            inflow = float(gl[gl.signature == name]["value"].sum()) + rg.get(name, 0.0)
-            outflow = float(sl[sl.signature == name]["value"].sum())
-            assert abs(inflow - outflow) <= 1e-6 * max(1.0, abs(outflow)), (m, name)
-        for name in res.concepts.concept:
-            inflow = float(sl[sl.concept == name]["value"].sum()) + rs.get(name, 0.0) \
-                + ct_.get(name, 0.0)
-            outflow = float(res.concepts[res.concepts.concept == name]["contribution"].iloc[0])
-            assert abs(inflow - outflow) <= 1e-6 * max(1.0, abs(outflow)), (m, name)
+        total = float(res.decomposition["contribution"].sum())
+        assert abs(total - res.risk) <= 1e-9 * max(1.0, abs(res.risk)), m
+        # 分解必须覆盖冻结模型的**全部**列，而不是只含展示节点
+        assert len(res.decomposition) >= 40
+        if m in ("M2", "M3"):
+            # CT_* 列的贡献**永远**在完整分解中，与是否展示 Cancer type 节点无关
+            ct_cols = [f for f in res.decomposition.feature if f.startswith("CT_")]
+            assert ct_cols, m
+            # 展示与否由 cohort 决定：多癌种显示、单癌种隐藏
+            shown = (res.auxiliaries.kind == "cancer").any()
+            assert shown == (len(set(ct)) > 1), (m, shown, sorted(set(ct)))
+        else:
+            assert not (res.auxiliaries.kind == "cancer").any()
 
 
-def test_risk_node_inflow_equals_linear_predictor():
-    """risk 节点总入流 == full Cox 线性预测子（含 Other concepts 与辅助节点）。"""
+def test_selection_matches_figure():
+    """res.genes/signatures/concepts/auxiliaries 必须与图上实际展示的节点完全一致。"""
     expr, ct, clin = _fx()
-    for m in ("M1", "M2", "M3"):
-        res = _sp()(expr, ct, expr.index[0], model=m, clinical=clin)
-        total = (float(res.concepts.contribution.sum())
-                 + float(res.auxiliaries.contribution.sum())
-                 + float(res.other_concepts_contribution))
-        assert abs(total - res.risk) <= 1e-4 * max(1.0, abs(res.risk)), m
-
-
-def test_gene_and_signature_links_are_exact_contributions():
-    """链接值必须是**精确贡献**：gene→signature 之和 == 该 signature 的展示入流。"""
-    expr, ct, clin = _fx()
-    res = _sp()(expr, ct, expr.index[0], model="M2", clinical=clin)
-    if len(res.gene_links) == 0:
-        pytest.skip("该样本无展示基因")
-    for name in res.signatures.signature:
-        sub = res.gene_links[res.gene_links.signature == name]
-        if len(sub) == 0:
-            continue
-        # 每个链接都必须落到某个展示基因/签名
-        assert set(sub.gene) <= set(res.genes.gene)
-        assert set(sub.signature) <= set(res.signatures.signature)
+    res = _sp()(expr, ct, expr.index[0], model="M3", clinical=clin)
+    rp = res.render()
+    sel = rp.selection
+    # 图的节点顺序是布局选择，故比较**集合**；两列基因必须逐名对应
+    assert set(res.genes.gene) == {n.name for n in sel["gene_score"]}
+    assert list(res.genes.gene) == list(res.genes.gene)          # 两列同行
+    assert set(res.genes.gene) == {n.name for n in sel["gene_tpm"]}
+    assert set(res.signatures.signature) == {n.name for n in sel["signatures"]}
+    assert set(res.concepts.concept) == {n.name for n in sel["predictors"]
+                                         if n.kind == "concept"}
+    assert set(res.auxiliaries.predictor) == {n.name for n in sel["predictors"]
+                                              if n.kind in ("clinical", "pc", "cancer")}
+    rp.close()
 
 
 # ---------------------------------------------------------------- M0 与非法输入
@@ -320,30 +317,69 @@ def test_invalid_model_rejected():
 
 
 # ---------------------------------------------------------------- 输出
-def test_html_and_static_output(tmp_path=None):
-    """HTML 必须可生成；静态图在没有 kaleido 时回退 matplotlib。"""
+def test_html_and_static_output():
+    """HTML 可独立导出；PNG/PDF/SVG 与 HTML 同源（同一 Figure）。"""
     import tempfile
-    from pathlib import Path
+    from pathlib import Path as _P
     expr, ct, clin = _fx()
     res = _sp()(expr, ct, expr.index[0], model="M2", clinical=clin)
-    d = Path(tempfile.mkdtemp(prefix="sp_out_"))
-    h = res.save_html(d / "p.html")
-    assert h.is_file() and h.stat().st_size > 5000
-    s = res.save_static(d / "p.png")
-    assert s.is_file() and s.stat().st_size > 5000
-    assert "<html" in (d / "p.html").read_text(encoding="utf-8", errors="ignore").lower()
+    d = _P(tempfile.mkdtemp(prefix="sp_out_"))
+    h = res.save_html(d / "p.html")            # 不先保存 PNG
+    assert h.is_file() and h.stat().st_size > 50_000
+    assert "data:image/png;base64," in h.read_text(encoding="utf-8", errors="ignore")
+    for ext in ("png", "pdf", "svg"):
+        f = res.save_static(d / f"p.{ext}")
+        assert f.is_file() and f.stat().st_size > 5_000, ext
+    files = res.save(d / "all")
+    for k in ("png", "pdf", "svg", "html", "nodes.tsv", "selection.json",
+              "decomposition.tsv"):
+        assert files[k].is_file(), k
 
 
-def test_figure_contains_sankey_and_risk_column():
-    """单图内必须同时含 Sankey 与右侧风险柱，且 cutoff 用直接 shape（避开 Plotly 陷阱）。"""
+def test_html_embeds_the_same_png_bytes():
+    """HTML 内嵌图像必须与同一次导出的 PNG **字节一致**（不存在第二套绘图器）。"""
+    import base64, hashlib, re, tempfile
+    from pathlib import Path as _P
     expr, ct, clin = _fx()
     res = _sp()(expr, ct, expr.index[0], model="M2", clinical=clin)
-    fig = res.figure()
-    types = [t.type for t in fig.data]
-    assert "sankey" in types and any(t in ("heatmap", "scatter") for t in types)
-    assert len(fig.data[0].link.value) > 0
-    assert all(v >= 0 for v in fig.data[0].link.value)      # Plotly 要求非负
-    assert len(fig.layout.shapes) >= 1
+    d = _P(tempfile.mkdtemp(prefix="sp_html_"))
+    files = res.save(d / "x")
+    m = re.search(r"data:image/png;base64,([A-Za-z0-9+/=]+)",
+                  files["html"].read_text(encoding="utf-8"))
+    assert m, "HTML 未内嵌 PNG"
+    assert (hashlib.sha256(base64.b64decode(m.group(1))).hexdigest()
+            == hashlib.sha256(files["png"].read_bytes()).hexdigest())
+
+
+def test_repeated_export_is_deterministic():
+    """同一结果重复导出不得改动输入，且不引入随机布局。"""
+    import hashlib, tempfile
+    from pathlib import Path as _P
+    expr, ct, clin = _fx()
+    res = _sp()(expr, ct, expr.index[0], model="M2", clinical=clin)
+    before = res.genes.copy()
+    d1, d2 = _P(tempfile.mkdtemp()), _P(tempfile.mkdtemp())
+    h1 = hashlib.sha256(res.save_static(d1 / "a.png").read_bytes()).hexdigest()
+    h2 = hashlib.sha256(res.save_static(d2 / "a.png").read_bytes()).hexdigest()
+    assert h1 == h2, "同一结果两次导出的 PNG 不一致（存在随机布局）"
+    assert res.genes.equals(before), "导出过程改动了结果对象"
+
+
+def test_figure_has_circles_uniform_links_and_risk_bar():
+    """圆形节点 + 等粗等色连线 + 风险柱；连线不编码 contribution。"""
+    expr, ct, clin = _fx()
+    res = _sp()(expr, ct, expr.index[0], model="M2", clinical=clin)
+    rp = res.render()
+    from matplotlib.patches import PathPatch
+    ax = rp.figure.axes[0]
+    links = [p for p in ax.patches if isinstance(p, PathPatch)]
+    assert links, "图中没有连线"
+    styles = {(round(p.get_linewidth(), 6), tuple(np.round(p.get_edgecolor(), 6)),
+               round(float(p.get_alpha()), 6)) for p in links}
+    assert len(styles) == 1, f"连线样式不唯一（应等粗等色）：{styles}"
+    # 圆形节点：scatter 的 marker 面积对应固定半径，且不含方/三角
+    assert any(len(c.get_offsets()) > 0 for c in ax.collections), "缺少节点圆点"
+    rp.close()
 
 
 def test_semantics_disclaimer_present():

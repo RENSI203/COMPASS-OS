@@ -29,9 +29,11 @@ dependencies = [
 [project.optional-dependencies]
 upstream = ["immuno-compass==2.5.3"]   # 若不使用 vendored 副本
 test = ["pytest>=7"]
-# 样本级计算路径图（sample_path）：交互 HTML 需要 plotly；静态 PNG/SVG 需要 kaleido。
-# **核心推理不依赖它们** —— 未安装时仅该可视化功能不可用。
-plot = ["plotly>=5.18", "kaleido>=0.2.1"]
+# 说明：matplotlib 自 v1.0 起即为**核心依赖**（AnalysisResult.save_report 出图需要）。
+# sample_path 的渲染层不引入任何**新增**硬依赖：PNG/PDF/SVG/HTML 全部由同一个
+# Matplotlib Figure 导出，HTML 内嵌同一份 PNG 字节 —— 不再需要 Plotly / Kaleido / CDN。
+# 该 extra 供 `pip install --no-deps` 等最小安装场景显式补齐绘图依赖使用。
+plot = ["matplotlib>=3.7"]
 
 [project.urls]
 Documentation = "https://github.com/RENSI203/COMPASS-OS#readme"

@@ -1,169 +1,259 @@
-# Sample-level computation path (`sample_path`)
+# Sample-level computation path ｜ 样本级计算路径归因
 
-> **What this is.** A *sample-specific computational attribution / representation-flow
-> visualization*: for one sample in an already-analysed cohort, it shows how the frozen model
-> graph produced that sample's Cox linear predictor, layer by layer, and where the sample sits
-> in the cohort risk distribution.
->
-> **What this is not.** Not a causal mechanism diagram, not a pathway-activation map, not a
-> biological causal network, and not a complete causal explanation of the predicted risk.
-> Link colour encodes *contribution direction* (positive → higher model-estimated risk,
-> negative → lower); representation colour encodes *high / low model representation value*.
-> Neither may be read as "pathway activated / inhibited". The 43 concepts and 132 signatures
-> remain mechanism-oriented **hypothesis-generating** representations.
+<div align="center"><em>sample-specific computational attribution / representation-flow
+visualization</em></div>
+
+> **语义边界（务必遵守）**
+> 这是**样本级计算路径归因**：展示"对这一个样本，冻结模型图里各层分别取什么值、
+> 各 predictor 贡献了多少到 Cox 线性预测子 η"。
+> 它**不是**因果机制图、**不是**通路激活图、**不是**生物因果网络、
+> 也**不是**对最终风险的完整因果解释。
+> 节点颜色表示**该层自身的真实分数**（临床 / PC 节点表示 signed Cox contribution，
+> 用独立图例）；所有连线**等粗等色**，只表示筛选后的模型连接关系，
+> **不编码权重或流量**，本图**不作流量守恒声明**。
 
 ---
 
-## 1. Quick start
+## 1. 一键调用
 
 ```python
-import pandas as pd
-import compass_os
 from compass_os import sample_path
 
-expr = pd.read_csv("expression.tsv", sep="\t", index_col=0)   # samples × genes, TPM
-cancer = pd.read_csv("labels.tsv", sep="\t", index_col=0)["cancer_type"].tolist()
-clinical = pd.read_csv("clinical.tsv", sep="\t", index_col=0)
-
-res = sample_path(
-    expr, cancer, "TCGA-19-1787",      # the sample of interest
-    model="M2",                        # M1 / M2 / M3
-    clinical=clinical,
-)
-
-res.summary()                          # plain-text overview
-res.save_html("sample_path.html")      # interactive Plotly figure (required output)
-res.save_static("sample_path.png")     # static: kaleido, else matplotlib fallback
+res = sample_path(expr, cancer_type, "TCGA-19-1787", model="M3", clinical=clinical)
+print(res.summary())
 ```
 
-## 2. What the figure contains
+一次调用自动完成：输入检查与既有预处理 → 冻结模型推理 → 真实表示层分数提取 →
+完整 Cox contribution 分解 → 展示节点与连接筛选 → 返回可导出结果对象。
+**普通用户不需要准备 `SamplePathData`、节点表或 JSON**（那是内部数据接口 / 调试导出）。
 
-Left to right:
+`expr` / `cancer_type` / `clinical` / `input_scale` / `missing_gene_strategy` 的语义与
+`compass_os.predict` 完全一致；`sample_id` 必须出现在 `expr.index` 中。
 
-| column | content | how nodes are selected |
+---
+
+## 2. 图结构
+
+```
+Gene expression → COMPASS gene score → Granular signature score
+    → High-level concepts + clinical / PC → Cohort-relative risk
+```
+
+| 列 | 内容 | 节点颜色表示 |
 |---|---|---|
-| gene expression | ≤ `top_genes` (default 50) genes | **by exact contribution** to the displayed concepts, not by TPM |
-| gene-set / granular representation | ≤ `top_signatures` (50) of the 132 | by the sample's own contribution |
-| high-level concepts | top concepts by `\|x_c β_c\|` | **not** by raw concept score |
-| auxiliary predictors | Age, Sex, Stage, PC1–PC10 (M3), cancer type | direct Cox predictors of the frozen head |
-| cohort-relative risk | continuous vertical column | red (higher) → green (lower) within the cohort |
+| 1 | Gene expression | 该基因的真实表达值（单位见 `expression_units`） |
+| 2 | COMPASS gene score | **真实 gene-token 标量分数** |
+| 3 | Granular signature score | 真实的 132 signature 表示 |
+| 4 | High-level concepts + clinical / PC | concept = 真实 concept 分数；临床 / PC = signed Cox contribution（独立图例） |
+| 5 | Cohort-relative risk | 连续风险柱（cohort percentile 轴） |
 
-Node colour and node *selection* are deliberately separate rules: colour reflects the
-sample's expression / representation value, while selection reflects contribution.
+* **所有节点为圆形**；第 1、2 列同尺寸且最小，第 3 列更大，第 4 列最大。
+* **所有连线等粗、等色、较细、浅灰**，只表示所展示的模型连接关系。
+* 主图**不展示** Other genes / signatures / concepts、offset、residual 或其他记账节点；
+  这些项的数值仍完整保留在 `res.decomposition`。
+* 实际被冻结填补的临床节点标注 **`(imputed)`**。
+* 完整名称与精确数值见 HTML 内嵌的**可展开节点表**，以及 `*.nodes.tsv`。
 
-### Exact flow conservation
+---
 
-Every internal node conserves flow. Where a layer is truncated for readability, an explicit
-residual node carries the remainder:
+## 3. 分数来源（全部真实）
 
-* **Other genes (not shown)** → the displayed gene-sets
-* **Other signatures (not shown)** → the displayed concepts
-* **Other concepts (aggregated)** → risk
-* **Frozen model centering (constant)** → the displayed concepts
-
-Consequently the inflow at the risk node sums to the **full Cox linear predictor** — the figure
-never implies a partial sum is the whole.
-
-## 3. The decomposition is exact, and the risk is the main API's risk
-
-Nothing is re-predicted for display. All quantities come from frozen artefacts and the official
-extraction API:
-
-| quantity | source | measured agreement |
+| 数据 | 来源 | 说明 |
 |---|---|---|
-| gene / 132 / 43 layers | `PreTrainer.extract(..., with_gene_level=True)` | — |
-| `gene-set score = Σ_g a_{g,j}·gene_score_g` | frozen attention + shared scorer | `max\|Δ\| = 1.8e-07` |
-| `concept score = Σ_j b_{j,c}·gene-set score_j` | frozen attention | `max\|Δ\| = 3.3e-08` |
-| per-feature Cox contributions | `survival.build_design_matrix` + frozen `beta` | sums to η at `2.2e-16 … 8.9e-16` (M1/M2/M3) |
-| displayed **risk / rank / percentile** | `compass_os.predict()` output | **identical** |
+| **gene-token 标量分数** | 官方 `PreTrainer.extract(..., with_gene_level=True)` 的 `dfg` | = `genesetprojector.geneset_scorer(encoder_output)[:, 2:]`，对每个基因位置施加**共享的** `nn.Linear(32→1)`；形状 `(n_samples, 15672)`；源码 `assets/third_party/compass/model/tune.py:289-291` |
+| 132 signature | 主 API `predict()` **同一次前向**的 `signature_scores` | 与 η 严格同源 |
+| 43 concept | 主 API `predict()` **同一次前向**的 `concept_scores` | 与 η 严格同源 |
+| Age / Sex / Stage / Cancer type / PC1–PC10 | 冻结 Cox **设计矩阵逐列贡献**聚合 | 多编码列取 **signed sum**；PC1–PC10 为十个冻结设计列贡献之和，沿用原标准化口径 |
+| η / rank / percentile / cutoff | 主 API 直接输出 | 图**不重算**排名 |
+| 连接拓扑 | 冻结注意力（gene→gene-set、gene-set→concept） | **只**用于决定画哪些连接，**不**作为节点分数 |
 
-The attribution chain and the cohort prediction run as two independent float32 forward passes;
-their linear predictors agree to ≈`1e-06`–`1e-05`. The difference is reported as
-`SamplePathResult.eta_max_abs_diff`, and the figure always displays the **main API** risk.
+**禁止替代**：attention / projector weight、TPM、gene→signature 的风险分配量、
+旧 HTML 的 upstream contribution 都**不是** gene score。
 
-## 4. Parameters
+`decomposition` 为**完整未截断**分解，含未展示 concept、被隐藏的 Cancer type 及必要的
+algebraic offset，满足：
 
-| parameter | default | meaning |
-|---|---|---|
-| `model` | `"M2"` | `M1` / `M2` / `M3`. **`M0` is not supported** — it has no COMPASS concept branch. |
-| `top_genes` / `top_signatures` | `50` | per-layer display caps |
-| `top_concepts` | `None` | explicit cap; otherwise the remaining high-level budget is used |
-| `max_high_level_nodes` | `16` | **predictor nodes** in the high-level column (concepts + clinical/PC/cancer) |
-| `show_cancer_type` | `None` (auto) | `None`: omitted for single-cancer cohorts (with a caption), shown for multi-cancer cohorts |
-| `cutoff` | `"median"` | `"median"` = **cohort** median of the current risk output (visualization only) or a numeric risk threshold |
-| `result` | `None` | pass an existing `PredictionResult` / `AnalysisResult` to reuse the cohort risk |
-| `input_scale` / `missing_gene_strategy` | as in `predict` | identical alignment and imputation path |
+```
+sum(all signed contributions) == η
+```
 
-### High-level node budget
+渲染层会强制校验该恒等式（不满足即拒绝出图）。
 
-The 16-node budget counts **Cox predictors** only (spec: concepts + clinical + PC aggregate +
-other required Cox predictors). The two bookkeeping nodes (*Other concepts*, *centering
-constant*) are reported separately as `n_high_level_nodes_total` and do not consume the budget.
+---
 
-| model | auxiliary predictors shown | concepts shown | total |
-|---|---|---|---|
-| M1 | — | 16 | 16 |
-| M2 | Age, Sex, Stage, Cancer type | 12 | 16 |
-| M3 | Age, Sex, Stage, Cancer type, PC1–PC10 | 11 | 16 |
-
-(Single-cancer cohort: cancer type is omitted → one more concept slot.)
-
-## 5. Reading the result object
+## 4. 展示预算与筛选（规格冻结）
 
 ```python
-res.risk                       # Cox linear predictor for this sample (= main API value)
-res.rank, res.n_samples        # 1 = highest risk in the cohort
-res.percentile                 # 0–100, from the official risk ordering
-res.cutoff, res.cutoff_mode    # and res.cutoff_is_frozen_validated (always False here)
-res.genes / .signatures / .concepts / .auxiliaries     # displayed layers + contributions
-res.decomposition              # full per-feature Cox decomposition (feature/value/beta/contribution)
-res.gene_links / .signature_links                       # exact Sankey topology
-res.other_concepts_contribution                         # aggregated hidden concepts
-res.eta_max_abs_diff           # attribution-chain vs main-API deviation (float32)
-res.notes                      # truncation, single-cancer, float32 caveats
+from compass_os.sample_path_render import Style
+
+style = Style(
+    gene_threshold=0.25,        # 作用于**真实 gene score 尺度**；仅展示参数
+    max_genes=32,               # ≤ 50
+    max_signatures=26,          # ≤ 50
+    predictor_budget=16,        # ≤ 16
+    expression_limits=(0, 1704.3),   # 颜色范围（超出仅饱和，不改数据）
+    gene_score_limits=(-2, 2),
+    signature_limits=(-1, 1),
+    concept_limits=(-1, 1),
+    contribution_limits=(-1.5, 1.5),
+)
+m2 = sample_path(expr, ct, sid, model="M2", clinical=clinical, style=style)
+m3 = sample_path(expr, ct, sid, model="M3", clinical=clinical, style=style)
 ```
 
-## 6. Cutoffs: two different things
+也可以直接用参数覆盖：
 
-* `cutoff="median"` (default) — the **cohort median of the current risk output**. A
-  visualization / cohort-relative grouping convenience. It is **not** a validated prognostic
-  threshold, and it moves with the cohort.
-* `cutoff=<number>` — a researcher-supplied risk threshold for display.
-* The **frozen validated cutoff** (`median_cutoff` in the model lock, e.g. `1.0783` for M2) is a
-  separate concept and is **not** selectable through this parameter;
-  `cutoff_is_frozen_validated` is therefore always `False` here.
+```python
+sample_path(..., gene_threshold=0.5, max_genes=20, max_signatures=18, predictor_budget=14)
+```
 
-## 7. Dependencies
+**M2/M3 对比请传同一份 `Style`**，以保证画布、节点尺寸、列位置、字体规则与颜色尺度一致。
+颜色范围是**共享的固定尺度**，不会对每张图的选中节点重新 min-max 或 z-score。
 
-`plotly` is required for figures and is declared as the optional extra
-`compass-os[plot]` (`plotly` + `kaleido`). **Core inference does not depend on it.**
-Static export uses `kaleido` when present and otherwise falls back to a
-dependency-free matplotlib rendering of the same attribution data (layered contribution bars).
+### High-level 预算表
+
+| 模型 / 队列 | 实际展示 |
+|---|---|
+| M1 | 16 concepts |
+| M2，单癌种 | 13 concepts + Age + Sex + Stage |
+| M2，多癌种 | 12 concepts + Age + Sex + Stage + Cancer type |
+| M3，单癌种 | 12 concepts + Age + Sex + Stage + 一个 `PC1–PC10` 节点 |
+| M3，多癌种 | 11 concepts + Age + Sex + Stage + Cancer type + 一个 `PC1–PC10` 节点 |
+
+* 单癌种隐藏 Cancer type **仅影响展示**；该项 contribution 仍在完整模型计算与
+  `decomposition` 中。
+* **真筛选**：按阈值与上限真正删除节点与连接，**不是**把多余 label 设空。
+* Gene expression 与 Gene score **两列展示同一组基因**，逐名对应。
+* **没有节点通过阈值时**，明确显示空层提示，**不会**偷偷降低阈值补齐节点。
+* 默认阈值与颜色范围是**可配置展示参数**，**不是**经过临床验证的科学阈值。
+
+### 筛选顺序（与渲染层一致）
+
+1. 第四列：按 `|signed Cox contribution|` 选 top concept（名额 = `predictor_budget` − 必需临床/PC 节点）。
+2. 第三列：限定为所展示 concept 的**上游** signature，按 `|signature score|` 取 top `max_signatures`。
+3. 第二列：限定为所展示 signature 的**上游**基因，按 `|gene score|` 且 `>= gene_threshold`
+   取 top `max_genes`；每条 signature 默认最多保留 4 条基因连接
+   （`max_gene_edges_per_signature=None` 可保留全部）。
+4. 被连接裁剪后**断开**的基因同时从第 1、2 列删除（不添加 Other placeholder）。
+
+---
+
+## 5. 风险柱
+
+* 竖直、上**红**下**黄**、足够长；高风险在上、低风险在下（cohort percentile 轴 0–100 %）。
+* 第四列所有连线收束到三角形附近。
+* 三角形指向该样本**主 API 的真实 percentile** 位置。
+* 标注 `Risk η = ... / Rank = ... / N / Percentile = ...%`。
+* **cutoff 虚线**按其**真实经验分位**定位（`100 × (N[η<cutoff] + 0.5·N[η=cutoff]) / N`），
+  **不会**一律画在 50 %。
+
+`cutoff` 参数：
+
+| 取值 | 含义 |
+|---|---|
+| `"median"`（默认） | **当前 cohort** 的 η 中位数，**仅可视化分界**，**不是**冻结的 validated cutoff |
+| 数值 | 研究者给定的风险阈值（同样按真实队列分布定位） |
+
+`res.cutoff_is_frozen_validated` 恒为 `False`：本功能**从不**把冻结预后分组 cutoff
+当作展示分界。
+
+**主 API 的 risk 尺度**：`compass_os.predict().risk` 就是 **Cox 线性预测子 η**
+（不是 `exp(η)`、不是概率、不是另一种 risk scale），因此图中标注的 η 使用的正是 η。
+`rank` / `percentile` 沿用主 API 既定结果：
+
+```
+rank       = 1 + #{cohort η > η_i}
+percentile = 100 × (P(η < η_i) + 0.5 × P(η == η_i))      # 高值 = 高风险
+```
+
+---
+
+## 6. 结果对象
+
+```python
+res.sample_id, res.model, res.cancer_type
+res.risk              # 主 API 的 η
+res.rank, res.n_samples, res.percentile
+res.cutoff, res.cutoff_mode, res.cutoff_is_frozen_validated
+res.decomposition     # DataFrame: feature / value / beta / contribution（完整未截断）
+res.genes             # 展示的第 1、2 列基因（gene / expression / gene_score）
+res.signatures        # 展示的 132 层
+res.concepts          # 展示的 43 层（concept / score / contribution）
+res.auxiliaries       # 展示的临床 / PC / Cancer type 节点
+res.notes, res.semantics, res.summary()
+```
+
+`res.genes` / `res.signatures` / `res.concepts` / `res.auxiliaries` 由渲染层的
+`select_nodes` 决定，因此**与图永远一致**。
+
+---
+
+## 7. 导出
+
+```python
+res.save_html("sample_path.html")     # 可独立调用，无需先保存 PNG
+res.save_static("sample_path.png")    # .png / .pdf / .svg
+res.save("out/M3_low")                # 一次导出全部
+# -> M3_low.{png,pdf,svg,html,nodes.tsv,selection.json,decomposition.tsv}
+
+rp = res.render()                     # RenderedPath：.figure / .selection / .cutoff
+rp.close()
+```
+
+* PNG / PDF / SVG 由**同一个 Figure** 导出；**HTML 内嵌同一份 PNG 字节**并提供可展开的
+  精确节点表，三种格式**不存在两套布局**。
+* **不再使用**旧 Plotly Sankey 与 matplotlib fallback 两种外观；导出失败**不会**静默切换
+  成另一种图形。
+* HTML 主图是**静态一致版本**（没有 hover / 缩放）；精确数值请用内嵌节点表或
+  `*.nodes.tsv`。
+
+### 迁移说明（v1.0.x 之后未发布的绘图 API → v1.1.0）
+
+| 旧写法 | 新写法 |
+|---|---|
+| `res.figure()` 返回 Plotly `Figure` | 返回 `RenderedPath`（`.figure` 为 Matplotlib Figure） |
+| `fig.write_html(...)` / `res.save_html(p, include_plotlyjs=...)` | `res.save_html(p)`（无 plotly 参数） |
+| `res.save_static(png)`（kaleido 或 fallback） | `res.save_static(png/pdf/svg)`（同一 Figure） |
+| `top_genes` / `top_signatures` / `max_high_level_nodes` | `max_genes` / `max_signatures` / `predictor_budget`（旧名仍兼容） |
+| `top_concepts` | 已弃用：concept 数 = `predictor_budget` − 必需临床/PC 节点 |
+| `res.gene_links` / `residual_*` / `centering_*` | 已移除（属旧"流量守恒"视图）；完整数值见 `res.decomposition` |
+
+---
+
+## 8. 依赖
+
+* 绘图使用 **matplotlib**，自 v1.0 起即为**核心依赖**（`AnalysisResult.save_report` 出图需要），
+  本功能**没有引入新增硬依赖**：不再需要 Plotly / Kaleido / CDN。
+* 渲染层**惰性导入** matplotlib：未安装时 `import compass_os`、核心预测与
+  `sample_path()` 的**计算**部分照常可用；调用导出时给出明确安装提示
+  （`pip install "compass-os[plot]"` 或 `pip install matplotlib`）。
+
+---
+
+## 9. 示例
+
+`examples/sample_path_example.py` 在真实队列（GSE39582，COAD，n=573）上按 **M3** percentile
+最接近 10 / 50 / 90 程序化选择 3 个样本，对**同一批样本**分别绘制 M2 与 M3（共用一份
+`Style`），输出 6 组 PNG/PDF/SVG/HTML + 完整 decomposition + selection 审计：
 
 ```bash
-pip install "compass-os[plot]"
+MPLCONFIGDIR=/tmp/mplcfg python examples/sample_path_example.py \
+    --cohort GSE39582 --out docs/figures/sample_path_integration
 ```
 
-## 8. Bundled examples
+---
 
-Reference outputs produced by `examples/sample_path_example.py` on the 5-sample example cohort
-(sample `TCGA-19-1787`):
+## 10. 如何解读（与不可解读）
 
-| file | content |
-|---|---|
-| [`figures/sample_path/sample_path_M1.html`](figures/sample_path/sample_path_M1.html) | interactive, M1 (16 concepts, no clinical/PCA) |
-| [`figures/sample_path/sample_path_M2.html`](figures/sample_path/sample_path_M2.html) | interactive, M2 (12 concepts + Age/Sex/Stage/Cancer type) |
-| [`figures/sample_path/sample_path_M3.html`](figures/sample_path/sample_path_M3.html) | interactive, M3 (11 concepts + those + aggregated PC1–PC10) |
-| `figures/sample_path/sample_path_M{1,2,3}.png` | static (matplotlib fallback; kaleido not installed here) |
-| [`figures/sample_path/example_M2.decomposition.tsv`](figures/sample_path/example_M2.decomposition.tsv) | full per-feature Cox decomposition for the M2 example |
+**可以**：
+* 该样本的表示层取值高低（第 1–3 列颜色）；
+* 哪些 concept / 临床 / PC 项对该样本的 η 贡献最大、方向如何（第 4 列）；
+* 该样本在**当前队列**风险分布中的相对位置（第 5 列）。
 
-## 9. Interpreting responsibly
-
-* A gene's contribution may be **negative**; width encodes magnitude, colour encodes direction.
-  A large width is not "biological importance".
-* Concepts are **learned latent coordinates** (20/43 are reverse-encoded at the model level),
-  and the default model uses them as Cox predictors — so any association with risk is a
-  *model-linked representation association*, not independent evidence.
-* For a single-cancer cohort the cancer-type term is constant by construction; the figure says
-  so rather than hiding it.
-* The right-hand column is *cohort-relative model risk*, **not** an absolute death probability.
+**不可以**：
+* 把颜色读成 pathway **activated / inhibited**；
+* 把连线读成流量、权重或因果传递；
+* 把本图当作因果机制图、通路激活图或风险的完整因果解释；
+* 跨队列比较 percentile（它是**队列内**相对量）；
+* 把 cohort median cutoff 当作冻结的预后分组阈值；
+* 把默认阈值 / 颜色范围当作经验证的科学阈值。

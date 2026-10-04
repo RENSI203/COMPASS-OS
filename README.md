@@ -157,48 +157,103 @@ visualization — not a causal mechanism diagram, not a pathway-activation map</
 ```python
 from compass_os import sample_path
 
-res = sample_path(expr, cancer_type, "TCGA-19-1787", model="M2", clinical=clinical)
-res.summary()
-res.save_html("sample_path.html")     # interactive Sankey + cohort-relative risk column
+res = sample_path(expr, cancer_type, "TCGA-19-1787", model="M3", clinical=clinical)
+print(res.summary())
+res.save_html("sample_path.html")     # HTML (same figure, expandable exact node table)
+res.save_static("sample_path.pdf")    # .png / .pdf / .svg — same Figure
+res.save("out/M3_low")                # all formats + nodes.tsv + selection.json + decomposition
 ```
 
-It decomposes **one sample's** Cox linear predictor through the frozen graph —
-gene expression → gene-set/granular representation → 43 concepts → risk — and adds the clinical
-/ PCA / cancer-type predictors that connect directly to the risk head, plus the sample's
-position in the cohort risk distribution.
+One call does everything: input checks → frozen inference → real representation-layer scores →
+**full** Cox contribution decomposition → display selection → exportable result object.
+You never assemble node tables or JSON by hand.
 
-* **Exact, not approximate**: gene→gene-set→concept is reconstructed from the official
-  `extract(with_gene_level=True)` output (agreement `1.8e-07` / `3.3e-08`), and the per-feature
-  Cox contributions sum to the linear predictor at `2.2e-16 … 8.9e-16` (M1/M2/M3).
-* **The displayed risk, rank and percentile are the main API's own values** — nothing is
-  re-predicted for the figure.
-* **Every node conserves flow**, including explicit residual nodes ("Other genes/signatures/
-  concepts", "Frozen model centering"), so the inflow at the risk node equals the full Cox
-  linear predictor.
-* High-level layer shows at most **16 predictor nodes** (M1: 16 concepts; M2: 12 + Age/Sex/Stage/
-  Cancer-type; M3: 11 + those + a single aggregated **PC1–PC10** node whose value is the **sum**
-  of the ten PC contributions, not their mean).
-* `cutoff="median"` is the **cohort** median of the current risk output — a visualization
-  convenience, explicitly **not** the frozen validated cutoff.
-* Requires the optional `plotly` extra: `pip install "compass-os[plot]"`. Core inference does
-  not depend on it.
+**Figure structure** (circular layered path):
+
+```
+Gene expression → COMPASS gene score → Granular signature score
+    → High-level concepts + clinical / PC → Cohort-relative risk bar
+```
+
+* **Real scores, not weights.** The gene-score column is the official
+  `extract(with_gene_level=True)` gene-token scalar
+  (`geneset_scorer(encoder_output)[:, 2:]`, a shared `nn.Linear(32→1)`); the 132 signature and
+  43 concept columns come from the **same forward pass as η**. Attention/projector weights are
+  used only to decide *which* connections to draw — never as node values.
+* **Clinical / Cancer type / PC1–PC10** are aggregated from the **frozen Cox design matrix**:
+  multi-column terms take the signed sum of their column contributions (PC1–PC10 is one node =
+  sum of the ten frozen contributions, using the original standardisation). Fields that were
+  actually imputed are labelled `(imputed)`.
+* **Complete accounting.** The full, untruncated decomposition (including undisplayed concepts
+  and the hidden cancer term) satisfies `sum(contribution) == η`; the renderer enforces it.
+* **No flow claim.** All links share one width and colour and only express the selected model
+  connectivity. Node colour encodes that layer's own score (clinical/PC nodes encode their signed
+  Cox contribution, with a separate legend).
+
+**Display budgets** (frozen; `gene_threshold=0.25` on the real gene-score scale,
+`max_genes≤32`, `max_signatures≤26`, `predictor_budget≤16`, each high-dimensional column ≤ 50):
+
+| model / cohort | high-level nodes shown |
+|---|---|
+| M1 | 16 concepts |
+| M2, single-cancer | 13 concepts + Age + Sex + Stage |
+| M2, multi-cancer | 12 concepts + Age + Sex + Stage + Cancer type |
+| M3, single-cancer | 12 concepts + Age + Sex + Stage + one `PC1–PC10` node |
+| M3, multi-cancer | 11 concepts + Age + Sex + Stage + Cancer type + one `PC1–PC10` node |
+
+Cancer type is hidden for single-cancer cohorts (display only) but stays in the frozen model and
+in the full decomposition. Truncation is **real** node/edge removal — never hidden labels, and
+never a silent threshold relaxation to fill a layer.
+
+**Tuning** (display parameters only — not clinically validated thresholds):
+
+```python
+from compass_os.sample_path_render import Style
+style = Style(gene_threshold=0.5, max_genes=20, max_signatures=18, predictor_budget=14,
+              expression_limits=(0, 1704.3), contribution_limits=(-1.5, 1.5))
+m2 = sample_path(expr, ct, sid, model="M2", clinical=clinical, style=style)
+m3 = sample_path(expr, ct, sid, model="M3", clinical=clinical, style=style)  # same Style ⇒ comparable
+```
+
+Shorter forms: `sample_path(..., gene_threshold=0.5, max_genes=20, max_signatures=18,
+predictor_budget=14)`. Pass the **same** `Style` to M2 and M3 so canvas, node sizes, column
+positions, fonts and colour scales match.
+
+**Risk bar** — the cohort-percentile axis (high risk on top), a red→yellow gradient, a triangle
+at the sample's **main-API percentile**, `Risk η / Rank / Percentile / N`, and a dashed cutoff.
+`cutoff="median"` is the **current cohort's** η median — a visualization boundary, explicitly
+**not** the frozen validated prognostic cutoff. It is drawn at its true empirical percentile
+(not forced to 50 %), and `rank`/`percentile` are the main API's own values, never recomputed
+for the figure.
+
+**Export / dependencies.** PNG, PDF and SVG come from **one** Matplotlib `Figure`; the HTML
+embeds the **identical PNG bytes** and adds an expandable table of exact node values (the main
+figure in HTML is static — there is no separate interactive renderer and no Plotly/Kaleido/CDN
+requirement). Matplotlib is already a core dependency (`AnalysisResult.save_report`); the
+drawing layer imports it lazily, so `import compass_os`, prediction and the `sample_path`
+**computation** all work without it, and an export attempt raises an explicit install hint.
 
 `M0 contains no COMPASS concept branch and is not supported by the sample-level representation
 Sankey visualization.`
 
 Details: [`docs/SAMPLE_PATH.md`](docs/SAMPLE_PATH.md) ·
-[feasibility audit](docs/SAMPLE_SANKEY_FEASIBILITY_AUDIT.md) ·
-[validation](docs/SAMPLE_SANKEY_VALIDATION.md) · runnable:
+[integration validation](docs/SAMPLE_PATH_INTEGRATION_VALIDATION.md) ·
+[feasibility audit](docs/SAMPLE_SANKEY_FEASIBILITY_AUDIT.md) · runnable:
 [`examples/sample_path_example.py`](examples/sample_path_example.py).
 
-**中文**：`sample_path()` 把**单个样本**的 Cox 线性预测子沿冻结计算图逐层拆开
-（表达 → gene-set/细粒度表征 → 43 concepts → risk），并叠加直接连到风险头的临床/PCA/癌种
-predictor 与该样本在队列风险分布中的位置。要点：① 归因链条**精确**（与官方 `extract` 输出
-一致到 `1e-07`，逐特征贡献求和等于线性预测子到 `1e-16`）；② 图里的 **risk / rank /
-percentile 直接取主 API 的结果**，不为画图另算；③ **每个节点流量守恒**（截断处用显式残差节点
-补齐），风险节点入流等于完整线性预测子；④ high-level 层最多 **16 个 predictor 节点**，M3 的
-**PC1–PC10 合并为一个节点**、其值是十项贡献之**和**；⑤ `cutoff="median"` 是**当前队列**的
-风险中位数，仅作可视化便利，**不是**冻结的 validated cutoff。
+**中文**：`sample_path()` 一次调用完成输入检查 → 冻结推理 → 真实表示层分数提取 →
+**完整** Cox 贡献分解 → 展示节点筛选 → 可导出结果对象；**不需要**手工准备节点表或 JSON。
+图分为五列：Gene expression → COMPASS gene score → Granular signature score →
+High-level concepts + clinical/PC → Cohort-relative risk。要点：① gene score 列是官方
+`extract(with_gene_level=True)` 的**真实 gene-token 标量分数**（共享 `nn.Linear(32→1)`），
+132/43 两层与 η 同一次前向，注意力权重**只**用于决定画哪些连接；② 临床/癌种/PC 由**冻结
+Cox 设计矩阵**逐列贡献聚合（多列取 signed sum，PC1–PC10 为十项之和，沿用原标准化口径），
+真实填补的字段标注 `(imputed)`；③ 完整分解（含未展示 concept 与被隐藏的癌种项）满足
+`sum(contribution) == η`，渲染层强制校验；④ 所有连线**等粗等色**、只表示筛选后的模型连接，
+**不作流量守恒声明**；节点颜色表示该层自身分数。主要调参：`gene_threshold` / `max_genes` /
+`max_signatures` / `predictor_budget` 与颜色范围，**均为展示参数，不是经验证的科学阈值**；
+M2/M3 对比请传**同一份** `Style`。PNG/PDF/SVG 由**同一个** Figure 导出，HTML 内嵌**同一份
+PNG 字节**并提供精确节点表。
 ⚠ 语义边界：这是**样本级计算路径归因**，不是因果机制图、不是通路激活图；颜色表示模型取值
 高低或贡献方向，**不得**读作 pathway activated / inhibited。
 
