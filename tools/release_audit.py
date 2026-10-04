@@ -38,6 +38,13 @@ ALLOW_PATH_PATTERNS = (
 #: 只对"源码/文档/配置"做绝对路径扫描；数据结构文件（.json/.tsv 数值）不扫
 TEXT_SCAN_SUFFIX = (".py", ".md", ".cff", ".toml", ".in", ".cfg", ".txt")
 
+#: 开发机绝对路径/用户名的检测口径。**唯一事实来源**：
+#: 供 tools/release_audit.py 与 tests/test_audit_docs_paths.py 共用，
+#: 避免两处各写一份正则而漂移（tests/ 不在白名单内，字面量只能出现在 tools/）。
+MACHINE_PATH_PATTERN = re.compile(
+    r"(/home/[A-Za-z0-9_.-]+/|/mnt/[a-z]/|[A-Za-z]:\\\\|"
+    r"projects/202608|rensi)")
+
 FORBIDDEN_NAMES = re.compile(
     r"(TcgaTargetGtex|expression_tcga_tpm|expression_tcga_log2tp1|"
     r"series_matrix|\.soft$|GSE\d+.*\.(gz|txt)$|"
@@ -50,8 +57,7 @@ def scan_paths(root: Path) -> list:
     def add(kind, path, detail, status):
         rows.append({"check": kind, "path": str(path), "detail": detail, "status": status})
 
-    pat = re.compile(r"(/home/[A-Za-z0-9_.-]+/|/mnt/[a-z]/|[A-Za-z]:\\\\|"
-                     r"projects/202608|rensi)")
+    pat = MACHINE_PATH_PATTERN
     for f in sorted(root.rglob("*")):
         if not f.is_file():
             continue

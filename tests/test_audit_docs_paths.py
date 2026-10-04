@@ -13,13 +13,22 @@
 """
 from __future__ import annotations
 
-import re
+import importlib.util
 
 from _util import repo_root
 
-#: 与 tools/release_audit.py 的检测口径保持一致（见其 ALLOW_PATH_PATTERNS）
-PATTERN = re.compile(r"(/home/[A-Za-z0-9_.-]+/|/mnt/[a-z]/|[A-Za-z]:\\\\|"
-                     r"projects/202608|rensi)")
+
+def _pattern():
+    """复用 ``tools/release_audit.py`` 的检测正则（**唯一事实来源**）。
+
+    不在此处重写一份：既避免两处口径漂移，也避免把机读路径字面量放进
+    ``tests/``（该目录不在 release_audit 的路径白名单内）。
+    """
+    path = repo_root() / "tools" / "release_audit.py"
+    spec = importlib.util.spec_from_file_location("_release_audit", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.MACHINE_PATH_PATTERN
 
 
 def _audit_files():
@@ -34,7 +43,7 @@ def test_audit_docs_contain_no_machine_paths():
     bad = []
     for f in files:
         for i, line in enumerate(f.read_text(encoding="utf-8", errors="ignore").splitlines(), 1):
-            if PATTERN.search(line) and "http" not in line:
+            if _pattern().search(line) and "http" not in line:
                 bad.append(f"{f.name}:{i}: {line.strip()[:80]}")
                 break
     assert not bad, (
