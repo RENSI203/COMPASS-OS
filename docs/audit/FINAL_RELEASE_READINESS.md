@@ -66,7 +66,7 @@
 | 冻结资产 | **13 项异常 0** |
 | 六类禁止声明扫描 | **全部未出现** |
 | 审查文档机读路径守卫 | **PASS**（新增 2 项测试） |
-| wheel / sdist SHA256 | `188eba11…` / `9859f22d…`（**最终**，见 §3.1） |
+| wheel / sdist SHA256 | `7af6c2d7…` / `875ad23e…`（**最终**，见 §3.1） |
 | README 复现数字独立实测 | **1.110e-16 / 2.372e-07 / 1.060e-06**（判据 1e-5）**PASS** |
 | README 覆盖度数字独立重算 | **完全吻合** |
 
@@ -90,8 +90,9 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 | 项 | 值 / 结果 |
 |---|---|
 | 构建来源 | clean worktree `/tmp/gh_audit/rel`，检出最终候选，未提交改动 **0** |
-| `compass_os-1.1.0-py3-none-any.whl` | **`188eba11d3324a2f359ea88160957d956a232f5c4f260f70fbbffa3d9ef1da8b`** |
-| `compass_os-1.1.0.tar.gz` | **`9859f22d7499a7d3f27fb63be2187c73e66e06d9bd2ab991e961be145822e3a5`** |
+| **声明的发布构建 epoch** | **`1791113420`**（= 代码冻结点 `7571035` 的提交时间）—— **固定值，不由 HEAD 推导**，故后续纯文档提交**不会**改变产物哈希 |
+| `compass_os-1.1.0-py3-none-any.whl` | **`7af6c2d7f36a02b4ac6033913d1268100d97de174543b2b368290043a9cbffbc`**（15,871,951 B） |
+| `compass_os-1.1.0.tar.gz` | **`875ad23ea23b0519e93e4ba7bf78b854cf5aeb6ddfce33ed46bcfa5546fa3124`**（16,747,514 B） |
 | 全新环境 | `venv --system-site-packages`，`pip install --no-deps --no-cache-dir --force-reinstall <wheel>` |
 | **源码遮蔽检查** | 实际加载路径 = `…/relenv/lib/python3.12/site-packages/compass_os/__init__.py`；`sys.path` **不含**仓库 `src/`；基础环境**无**竞争安装 |
 | ① 核心预测 | ✅ `predict(model="M2,M3")` 返回 `['M2','M3']` |
@@ -101,7 +102,12 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 | ⑤ 数值自洽 | ✅ 图中 η == 主 API；完整分解 `sum == η` |
 | 运行位置 | 仓库外（`/tmp/gh_audit/reltest`），仅依赖 wheel + 外部表达缓存 |
 
-> **上述 ①–⑤ 全部针对最终 wheel**；`docs/audit/03` 与 `04` 中的端到端验证针对**源码树**，
+> **哈希稳定性说明**：先用 `SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD)` 构建时，
+> 每次纯文档提交都会改变 epoch 并产生**不同**的 wheel 哈希（本轮实测复现）。
+> 因此改为**声明固定 epoch** `1791113420`（代码冻结点时间），使哈希与后续文档提交解耦；
+> 同一 epoch 连续两次构建 SHA256 **完全一致**（已实测）。
+
+> **上述 ①–⑤ 全部针对最终 wheel**（`7af6c2d7…`）；`docs/audit/03` 与 `04` 中的端到端验证针对**源码树**，
 > 两者结论一致但对象不同。
 
 ---
@@ -231,8 +237,8 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 | `software_release_tag` | `v1.0.1` | **`planned (unreleased)`** —— tag **未创建**，不得当作已发布 |
 | `software_release_commit` | `7270935…` | **`4ea61a906fb3c0aa1004fb87f10674b7a7ebafff`** |
 | `software_release_date` | `2026-10-03` | **`planned (unreleased)`** |
-| `wheel_sha256` | `13c9b438…` | **`188eba11d3324a2f359ea88160957d956a232f5c4f260f70fbbffa3d9ef1da8b`** |
-| `sdist_sha256` | `550e04c1…` | **`9859f22d7499a7d3f27fb63be2187c73e66e06d9bd2ab991e961be145822e3a5`** |
+| `wheel_sha256` | `13c9b438…` | **`7af6c2d7f36a02b4ac6033913d1268100d97de174543b2b368290043a9cbffbc`** |
+| `sdist_sha256` | `550e04c1…` | **`875ad23ea23b0519e93e4ba7bf78b854cf5aeb6ddfce33ed46bcfa5546fa3124`** |
 | `scientific_asset_version` | `1.0.0` | **`1.0.0`（不变）** |
 
 **说明**：该文件属**论文资产**，**不在软件候选内**（`MANIFEST.in` 不收录 `paper_assets/`），
