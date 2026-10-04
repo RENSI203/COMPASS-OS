@@ -68,7 +68,7 @@
 | 冻结资产 | **13 项异常 0** |
 | 六类禁止声明扫描 | **全部未出现** |
 | 审查文档机读路径守卫 | **PASS**（新增 2 项测试） |
-| wheel / sdist SHA256 | `7af6c2d7…`（STABLE）/ sdist TREE-SPECIFIC（见 §3.1） |
+| wheel / sdist SHA256 | `6cde3bc3…` / `2f9d6bac…`（均为**该树**的值；发布前须重测） |
 | README 复现数字独立实测 | **1.110e-16 / 2.372e-07 / 1.060e-06**（判据 1e-5）**PASS** |
 | README 覆盖度数字独立重算 | **完全吻合** |
 
@@ -111,8 +111,8 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 |---|---|
 | 构建来源 | clean worktree `/tmp/gh_audit/rel`，检出最终候选，未提交改动 **0** |
 | **声明的发布构建 epoch** | **`1791113420`**（= 代码冻结点 `7571035` 的提交时间）—— **固定值，不由 HEAD 推导**，故后续纯文档提交**不会**改变产物哈希 |
-| `compass_os-1.1.0-py3-none-any.whl` | **`7af6c2d7f36a02b4ac6033913d1268100d97de174543b2b368290043a9cbffbc`**（15,871,951 B） |
-| `compass_os-1.1.0.tar.gz` | `e1d0ada350fb0f25a2c738f80dfc569751037f772fca970d5b6a43ddca1b0db6`（**TREE-SPECIFIC，且是时点值**，见下） |
+| `compass_os-1.1.0-py3-none-any.whl` | **`6cde3bc3a71f529c63e0bb2b002a3989d71aa12886c0203322e1ea1bb08692c8`**（同树两次构建一致） |
+| `compass_os-1.1.0.tar.gz` | `2f9d6bac4b0d37085244e02c20dd7ddc5bddbfb127422b56cdeb9d8a17987283`（**TREE-SPECIFIC 时点值**） |
 | 全新环境 | `venv --system-site-packages`，`pip install --no-deps --no-cache-dir --force-reinstall <wheel>` |
 | **源码遮蔽检查** | 实际加载路径 = `…/relenv/lib/python3.12/site-packages/compass_os/__init__.py`；`sys.path` **不含**仓库 `src/`；基础环境**无**竞争安装 |
 | ① 核心预测 | ✅ `predict(model="M2,M3")` 返回 `['M2','M3']` |
@@ -264,7 +264,7 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 
 | 项 | 结果 |
 |---|---|
-| 最终 sdist SHA256 | `ddd2f3ad3b7c1cfcd7e0cbaa6bb5b6253bba5ba6ed6024bf9bdeea4578ff0262`（**TREE-SPECIFIC**） |
+| 最终 sdist SHA256 | `2f9d6bac4b0d37085244e02c20dd7ddc5bddbfb127422b56cdeb9d8a17987283`（**TREE-SPECIFIC 时点值**） |
 | 内容 | **162 条目**；`pretrainer.pt` / `locked_M2.json` / `qc_config.json` / vendored compass / `COMPASS_LICENSE` / `gene_vocabulary.txt` / `cancer_codes.tsv` / 顶层元数据 **全部齐备** |
 | 字节码 | **0 条** ✅ |
 | **从 sdist 构建并安装** | ✅ `pip install <sdist>` → `Successfully installed compass-os-1.1.0` |
