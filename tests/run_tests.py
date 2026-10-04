@@ -25,7 +25,7 @@ sys.path.insert(0, str(HERE.parent / "src"))
 MODULES = ["test_assets", "test_duplicate_genes", "test_reproducibility",
            "test_api", "test_analysis", "test_qc_tiers", "test_v101_regressions",
             "test_packaging", "test_sample_path", "test_sample_path_integration",
-            "test_input_contract"]
+            "test_input_contract", "test_audit_docs_paths"]
 
 
 class _Skip(Exception):
