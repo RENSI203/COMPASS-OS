@@ -182,6 +182,21 @@ parent  55df2c6
 ```
 
 **候选 HEAD = `96152fe`**；**代码冻结点 = `624184c`**。
+
+> **冻结规则（消除"报告记录自身提交"的循环）**
+>
+> 本报告不可避免地要在提交之后才能写上该提交号。为免歧义，冻结以下口径：
+>
+> 1. **被验证、被构建的状态** = 代码冻结点 `624184c` 的**代码树** +
+>    运行验证时的候选 HEAD `96152fe`；
+> 2. 此后**只允许**对 `docs/audit/**` 做**纯文档**补充提交（包括本报告自身的措辞修订）；
+>    这类提交**不改变**任何已验证产物，`96152fe` 上的四组结果
+>    （审计 FAIL 0/WARN 0、测试 132/132、渲染层 12/12、资产 13/13）继续有效；
+> 3. **任何**对 `src/`、`tests/`、`pyproject.toml`、`CITATION.cff`、
+>    `MANIFEST.in`、`src/compass_os/assets/**` 的改动都会**立即作废**本次冻结，
+>    必须重新冻结、重建、重测，并更新本文件与 §5.4 的产物哈希。
+> 4. 复核者若发现 `git diff 624184c..<候选 HEAD> -- src tests pyproject.toml CITATION.cff MANIFEST.in src/compass_os/assets`
+>    **非空**，即应判定冻结失效。
 两个 Phase 0 提交只增删 `docs/audit/` 下的 markdown 与 tsv，
 **未触碰** `src/`、`tests/`、`pyproject.toml`、`CITATION.cff`、模型资产。
 
