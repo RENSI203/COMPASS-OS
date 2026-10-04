@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "compass-os"
-version = "1.0.1"
+version = "1.1.0"
 description = "COMPASS-based pan-cancer overall-survival risk prediction with mechanism-oriented representation readouts (132 gene signatures, 43 concepts)"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -29,6 +29,9 @@ dependencies = [
 [project.optional-dependencies]
 upstream = ["immuno-compass==2.5.3"]   # 若不使用 vendored 副本
 test = ["pytest>=7"]
+# 样本级计算路径图（sample_path）：交互 HTML 需要 plotly；静态 PNG/SVG 需要 kaleido。
+# **核心推理不依赖它们** —— 未安装时仅该可视化功能不可用。
+plot = ["plotly>=5.18", "kaleido>=0.2.1"]
 
 [project.urls]
 Documentation = "https://github.com/RENSI203/COMPASS-OS#readme"

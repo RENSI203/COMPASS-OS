@@ -5,7 +5,7 @@ framework.**
 
 **泛癌生存预测与机制导向转录组表征框架。**
 
-* **Version / 版本:** 1.0.1 · **Python package:** `compass_os` · **License:** MIT
+* **Version / 版本:** 1.1.0 · **Python package:** `compass_os` · **License:** MIT
 * **Repository:** `https://github.com/RENSI203/COMPASS-OS`
 
 > **Language / 语言**：Each section is written in English first (canonical release text for
@@ -146,6 +146,61 @@ Runnable scripts: [`examples/quick_start.py`](examples/quick_start.py) (Level 1)
 **使用者不需要了解** M0–M3 的区别、标准化、PCA、掩码空间、癌种 token 或设计矩阵——
 这些都在包内部固定。上面展示的是 `examples/quick_start.py`（5 例 LUAD）的**真实输出**；
 多癌种队列请按样本逐一传入癌种缩写，见 `examples/cohort_example.py`。
+
+---
+
+## 2b. Sample-level computation path ｜ 样本级计算路径归因
+
+<div align="center"><em>sample-specific computational attribution / representation-flow
+visualization — not a causal mechanism diagram, not a pathway-activation map</em></div>
+
+```python
+from compass_os import sample_path
+
+res = sample_path(expr, cancer_type, "TCGA-19-1787", model="M2", clinical=clinical)
+res.summary()
+res.save_html("sample_path.html")     # interactive Sankey + cohort-relative risk column
+```
+
+It decomposes **one sample's** Cox linear predictor through the frozen graph —
+gene expression → gene-set/granular representation → 43 concepts → risk — and adds the clinical
+/ PCA / cancer-type predictors that connect directly to the risk head, plus the sample's
+position in the cohort risk distribution.
+
+* **Exact, not approximate**: gene→gene-set→concept is reconstructed from the official
+  `extract(with_gene_level=True)` output (agreement `1.8e-07` / `3.3e-08`), and the per-feature
+  Cox contributions sum to the linear predictor at `2.2e-16 … 8.9e-16` (M1/M2/M3).
+* **The displayed risk, rank and percentile are the main API's own values** — nothing is
+  re-predicted for the figure.
+* **Every node conserves flow**, including explicit residual nodes ("Other genes/signatures/
+  concepts", "Frozen model centering"), so the inflow at the risk node equals the full Cox
+  linear predictor.
+* High-level layer shows at most **16 predictor nodes** (M1: 16 concepts; M2: 12 + Age/Sex/Stage/
+  Cancer-type; M3: 11 + those + a single aggregated **PC1–PC10** node whose value is the **sum**
+  of the ten PC contributions, not their mean).
+* `cutoff="median"` is the **cohort** median of the current risk output — a visualization
+  convenience, explicitly **not** the frozen validated cutoff.
+* Requires the optional `plotly` extra: `pip install "compass-os[plot]"`. Core inference does
+  not depend on it.
+
+`M0 contains no COMPASS concept branch and is not supported by the sample-level representation
+Sankey visualization.`
+
+Details: [`docs/SAMPLE_PATH.md`](docs/SAMPLE_PATH.md) ·
+[feasibility audit](docs/SAMPLE_SANKEY_FEASIBILITY_AUDIT.md) ·
+[validation](docs/SAMPLE_SANKEY_VALIDATION.md) · runnable:
+[`examples/sample_path_example.py`](examples/sample_path_example.py).
+
+**中文**：`sample_path()` 把**单个样本**的 Cox 线性预测子沿冻结计算图逐层拆开
+（表达 → gene-set/细粒度表征 → 43 concepts → risk），并叠加直接连到风险头的临床/PCA/癌种
+predictor 与该样本在队列风险分布中的位置。要点：① 归因链条**精确**（与官方 `extract` 输出
+一致到 `1e-07`，逐特征贡献求和等于线性预测子到 `1e-16`）；② 图里的 **risk / rank /
+percentile 直接取主 API 的结果**，不为画图另算；③ **每个节点流量守恒**（截断处用显式残差节点
+补齐），风险节点入流等于完整线性预测子；④ high-level 层最多 **16 个 predictor 节点**，M3 的
+**PC1–PC10 合并为一个节点**、其值是十项贡献之**和**；⑤ `cutoff="median"` 是**当前队列**的
+风险中位数，仅作可视化便利，**不是**冻结的 validated cutoff。
+⚠ 语义边界：这是**样本级计算路径归因**，不是因果机制图、不是通路激活图；颜色表示模型取值
+高低或贡献方向，**不得**读作 pathway activated / inhibited。
 
 ---
 

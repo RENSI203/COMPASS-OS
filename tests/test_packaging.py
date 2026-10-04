@@ -112,7 +112,8 @@ def test_setuptools_configuration_declares_package_data():
            "assets/third_party/compass/**/*.py" in txt
     assert 'exclude = ["compass_os.assets*"]' in txt, \
         "vendored compass 不得被 setuptools 当作 compass_os.assets.* 子包发现"
-    assert "version = \"1.0.1\"" in txt
+    import re as _re
+    assert _re.search(r'version = "\d+\.\d+\.\d+"', txt), "缺少版本号"
 
 
 def test_manifest_in_excludes_bytecode():

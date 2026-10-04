@@ -24,7 +24,7 @@ sys.path.insert(0, str(HERE.parent / "src"))
 
 MODULES = ["test_assets", "test_duplicate_genes", "test_reproducibility",
            "test_api", "test_analysis", "test_qc_tiers", "test_v101_regressions",
-            "test_packaging"]
+            "test_packaging", "test_sample_path"]
 
 
 class _Skip(Exception):
@@ -69,6 +69,7 @@ class _PytestShim:
     class _Raises:
         def __init__(self, exc):
             self.exc = exc
+            self.value = None          # 与 pytest 一致：`with raises(X) as e: e.value`
 
         def __enter__(self):
             return self
@@ -76,6 +77,7 @@ class _PytestShim:
         def __exit__(self, et, ev, tb):
             if et is None:
                 raise AssertionError(f"期望抛出 {self.exc.__name__}，但没有异常")
+            self.value = ev
             return issubclass(et, self.exc)
 
     @staticmethod

@@ -36,8 +36,9 @@ from .api import (PredictionResult, RepresentationResult, RobustnessResult,
                   check_robustness, get_representation, predict)
 from .exceptions import (AssetNotFoundError, CompassOSError, InputError,
                          MissingGenesError, UnknownCancerTypeError)
+from .sample_path import SamplePathResult, sample_path
 
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 
 #: Level 1（Quick）与 Level 2（Advanced）正式导出；其余模块为内部实现。
 __all__ = [
@@ -46,6 +47,8 @@ __all__ = [
     # Level 2
     "predict", "get_representation", "check_robustness",
     "PredictionResult", "RepresentationResult", "RobustnessResult",
+    # Level 2 · sample-level computational attribution（需要可选依赖 plotly 才能画图）
+    "sample_path", "SamplePathResult",
     # exceptions
     "CompassOSError", "MissingGenesError", "UnknownCancerTypeError",
     "AssetNotFoundError", "InputError",

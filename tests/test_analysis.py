@@ -23,12 +23,14 @@ EX = REPO / "examples" / "example_data"
 # 公开命名空间
 # --------------------------------------------------------------------------- #
 def test_public_namespace_is_converged():
-    """顶层只导出 Level 1/2 的 4 个函数 + 4 个结果类 + 异常。"""
+    """顶层只导出 Level 1/2 的公开函数 + 结果类 + 异常（v1.1.0 起含 sample_path）。"""
     import compass_os
     allowed = {"analyze", "AnalysisResult", "predict", "get_representation",
                "check_robustness", "PredictionResult", "RepresentationResult",
                "RobustnessResult", "CompassOSError", "MissingGenesError",
                "UnknownCancerTypeError", "AssetNotFoundError", "InputError",
+               # Level 2 · 样本级计算路径归因（v1.1.0 新增）
+               "sample_path", "SamplePathResult",
                "__version__"}
     assert set(compass_os.__all__) == allowed
     for name in allowed:
