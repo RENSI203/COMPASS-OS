@@ -97,7 +97,7 @@ upstream contribution 都**没有**被当作 gene score。注意力权重**仅**
 | 独立提取的 132 signature vs 主 API `signature_scores` | `max\|Δ\| < 1e-5` |
 | 独立提取的 43 concept vs 主 API `concept_scores` | `max\|Δ\| < 1e-5` |
 | gene 层形状 | `(1, 15672)`，全部有限 |
-| 同一输入重复预测的 risk | **逐位一致**（分数提取不改变风险） |
+| 同一输入重复预测的 risk | 实测差 **0.000e+00** → **逐位一致**（分数提取不改变风险） |
 
 节点颜色 = 该层**真实分数**；concept 只按 `|signed Cox contribution|` **选**节点，
 **没有**把颜色换成 contribution。

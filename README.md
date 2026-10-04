@@ -484,14 +484,18 @@ hypothesis-generating feature / risk-associated representation* 这类措辞；
 ### Reproducibility ｜ 可复现性
 
 The frozen package reproduces production outputs from the original model-development
-pipeline: 132 signatures `max|Δ| = 1.1e-16`, 43 concepts `max|Δ| = 2.4e-07`, and M0–M3
-risks `max|Δ| ≤ 1.06e-06` (acceptance criterion 1e-5). The official upstream
+pipeline **numerically within a pre-declared tolerance**: 132 signatures
+`max|Δ| = 1.1e-16`, 43 concepts `max|Δ| = 2.4e-07`, and M0–M3 risks
+`max|Δ| ≤ 1.06e-06` (acceptance criterion 1e-5). The official upstream
 `PreTrainer.extract()` and the production `predict()` + capture path agree to
-`max|Δ| = 0.0`.
+`max|Δ| = 0.0`, i.e. bit-for-bit for that comparison.
 
-**中文**：冻结包可逐位复现原模型开发流程的产物——132 signatures `max|Δ| = 1.1e-16`、
-43 concepts `max|Δ| = 2.4e-07`、M0–M3 风险 `max|Δ| ≤ 1.06e-06`（判据 1e-5）；
-官方 `PreTrainer.extract()` 与生产 `predict()` 路径完全一致（`max|Δ| = 0.0`）。
+**中文**：冻结包**在预设容差内**数值一致地复现原模型开发流程的产物——
+132 signatures `max|Δ| = 1.1e-16`、43 concepts `max|Δ| = 2.4e-07`、
+M0–M3 风险 `max|Δ| ≤ 1.06e-06`（判据 1e-5）。
+上述三项 `max|Δ|` **均非零**，因此属于"容差内一致"，**不是**逐位复现。
+只有官方 `PreTrainer.extract()` 与生产 `predict()` 路径的比较实测为 `max|Δ| = 0.0`，
+该一项可称逐位一致。
 
 ### External input availability ｜ 外部队列输入可达性
 

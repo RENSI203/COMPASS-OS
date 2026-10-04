@@ -60,17 +60,22 @@
 
 | 比较项 | 容差 | 依据 | **实测最大误差** | 判定 |
 |---|---|---|---|---|
-| 同一输入**重复**调用 | **0**（要求逐位一致） | 无随机性来源 | **0.000e+00** | **PASS** |
+| 同一输入**重复**调用 | **0** | 无随机性来源 | **0.000e+00** → 实测为 0，可称**逐位一致** | **PASS** |
 | `get_representation` vs `predict` 的 132 层 | — | 同一次前向 | **0.000e+00** | **PASS** |
 | `get_representation` vs `predict` 的 43 层 | — | 同一次前向 | **0.000e+00** | **PASS** |
 | 单样本 vs 批量 η | `1e-4` | float32 批次相关 BLAS | **3.699e-07** | **PASS** |
 | 输入行**乱序重排**后 η | `1e-4` | 同上 | **7.304e-06** | **PASS** |
 | 完整分解 signed sum vs η | `1e-9` | float64 求和顺序 | **2.220e-16** | **PASS** |
-| 图中 η vs 主 API | 0（逐位） | 同一数值 | **逐位一致** | **PASS** |
-| `sample_path` 出图后**再**预测 η | **0**（要求逐位一致） | 出图不得影响推理 | **0.000e+00** | **PASS** |
+| 图中 η vs 主 API | 0 | 同一数值 | **0.000e+00** | **PASS** |
+| `sample_path` 出图后**再**预测 η | **0** | 出图不得影响推理 | **0.000e+00** → 实测为 0，可称**逐位一致** | **PASS** |
 | M1（不依赖临床）在 `clinical=None` 前后 | `1e-12` | 临床不进入 M1 | **0.0** | **PASS** |
 
 **未为任何一项放宽容差。** 唯一的"0 容差"项（重复调用、出图后再预测）实测确为 0。
+
+> **术语纪律（发布口径）**：只有**实测差值恰为 `0.000e+00`** 的比较才可写"**逐位一致**"；
+> 任何**非零**误差（本表 `3.699e-07`、`7.304e-06`、`2.220e-16` 等）
+> 一律写"**在预设容差内数值一致**"，**不得**写"逐位一致"或"bitwise identical"。
+> 本表已按此口径标注。
 
 ---
 
@@ -111,8 +116,8 @@
 
 | 项 | 实测 | 判定 |
 |---|---|---|
-| 132 signature | `pred.signature_scores.shape = (120, 132)`；`get_representation` 与之**逐位一致**（0.0） | **PASS** |
-| 43 concept | `pred.concept_scores.shape = (120, 43)`；同样**逐位一致**（0.0） | **PASS** |
+| 132 signature | `pred.signature_scores.shape = (120, 132)`；`get_representation` 与之实测差 **0.000e+00**（**逐位一致**） | **PASS** |
+| 43 concept | `pred.concept_scores.shape = (120, 43)`；实测差 **0.000e+00**（**逐位一致**） | **PASS** |
 | QC 输出 | 覆盖度、逐样本 NaN 统计、`qc_tier_*`、warnings 齐备 | **PASS** |
 | 风险预测 | 4 模型列齐备，顺序固定 | **PASS** |
 | 冻结分组 | `risk_group` 取值 `{low: 90, high: 30}` —— 见下方限制 | **PASS（行为）** |
@@ -215,7 +220,7 @@ imputed: [{Age: False}, {Sex: False}, {Stage: False}, {Cancer type: False}, {PC1
 
 | 项 | 实测 |
 |---|---|
-| 图中 η vs 主 API | **逐位一致** |
+| 图中 η vs 主 API | **0.000e+00**（逐位一致） |
 | 完整分解 signed sum vs η | **2.220e-16**（容差 1e-9） |
 | PC1–PC10 单一节点，contribution | 0.5215600415595891（= 十个冻结设计列贡献之和） |
 | 分解行数 | M3 = 88 行（含未展示 concept、被隐藏的 CT_* 与 offset） |
@@ -236,12 +241,12 @@ imputed: [{Age: False}, {Sex: False}, {Stage: False}, {Cancer type: False}, {PC1
 |---|---|---|
 | `analyze().save_report(dir)` | 返回文件字典，13 个文件 | **PASS** |
 | `an.risk` | `Series`（默认模型 M2），长度 = 样本数 | **PASS** |
-| `an.concept_scores` / `an.signature_scores` | 与 `predict` **逐位一致**（0.0，§1） | **PASS** |
+| `an.concept_scores` / `an.signature_scores` | 与 `predict` 实测差 **0.000e+00**（逐位一致，§1） | **PASS** |
 | KM 曲线 | `save_report` 产出 KM 相关 `.png`/`.pdf`，其输入 η 即 `an.risk` | **PASS（同源）** |
 | `save_tables` / `to_dataframe` | **不存在该 API**（本阶段探针的猜测，非缺陷） | n/a |
 
 **限制（NOT VERIFIED）**：本阶段**未逐像素/逐行**核对导出的 `.tsv` 与内存对象，
-只核对了**上游数值同源**（导出所用 η 与 132/43 层即 `an.*`，且与 `predict` 逐位一致）。
+只核对了**上游数值同源**（导出所用 η 与 132/43 层即 `an.*`，且与 `predict` 实测差 **0.000e+00**）。
 若需更强的"导出文件 == 内存数值"断言，应补充读回比对（未做，记 NOT VERIFIED）。
 
 ---
