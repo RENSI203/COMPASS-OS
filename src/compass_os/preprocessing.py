@@ -146,6 +146,20 @@ def align_expression(expression: pd.DataFrame, missing_gene_strategy: str = "ref
     tpm.columns = [str(c) for c in tpm.columns]
 
     qc = gene_coverage(tpm, genes, missing_gene_strategy)
+    # 尺度自检（**提示，不阻断**）：与 analysis.py 既有启发式同一口径（max < 30 ⇒ 疑似 log2）。
+    # 放在共享路径上，使 predict() 与 analyze() 行为一致（此前只有 analyze() 有该提示）。
+    raw = expression.to_numpy(dtype=np.float64)
+    if raw.size:
+        mx = float(np.nanmax(raw))
+        if np.isfinite(mx):
+            if input_scale == "tpm" and mx < 30:
+                qc.warnings.append(
+                    f"input_scale='tpm' but the maximum input value is {mx:.3g} (< 30). If this "
+                    "matrix is log2(TPM+1), re-run with input_scale='log2_tpm1'.")
+            elif input_scale == "log2_tpm1" and mx > 30:
+                qc.warnings.append(
+                    f"input_scale='log2_tpm1' but the maximum input value is {mx:.3g} (> 30). If "
+                    "this matrix is linear TPM, re-run with input_scale='tpm'.")
     if missing_gene_strategy == "strict" and qc.n_missing_genes:
         raise MissingGenesError(qc.missing_gene_names, qc.n_required_genes)
 

@@ -68,6 +68,26 @@ resolution path as Level 2 (fixed in v1.0.1 — in v1.0.0 the one-click entry po
 Raw microarray intensities need external harmonisation first; there is no
 `input_scale="microarray"` in v1.
 
+### What the library can and cannot detect (read this before trusting a run)
+
+Only **two** scales are accepted: `"tpm"` and `"log2_tpm1"`. Anything else raises
+`InputError`. Two caveats follow directly from that, and both were verified by running the
+code (see `docs/audit/01_DATA_LIMITATIONS.md` §2):
+
+* **A non-negative counts or intensity matrix is numerically indistinguishable from TPM and
+  will be accepted silently**, then processed as if it were TPM. The library cannot guess the
+  scale from the numbers — declaring it correctly is the caller's responsibility.
+  If in doubt, `global_gene_coverage` and the risk distribution will *not* warn you.
+* Negative values **are** rejected with a hint to set `input_scale="log2_tpm1"`, which catches
+  most z-score / log-scale mistakes, but **not** a non-negative scale mistake.
+* `±Inf` is rejected as `InputError` (naming the offending samples and genes).
+  `NaN` is different: it is a **supported** marker meaning "gene missing in this sample"
+  and is handled by `missing_gene_strategy`.
+
+Only tumour types listed in `src/compass_os/data/cancer_codes.tsv` may be passed as
+`cancer_type`. `NORMAL` appears in that table as a **normal-tissue sentinel**
+(`compass_code = -1`) and is **rejected** — it is not a tumour type the frozen model supports.
+
 ---
 
 ## 4. Robustness analysis
