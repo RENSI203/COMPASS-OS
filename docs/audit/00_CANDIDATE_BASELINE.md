@@ -343,7 +343,7 @@ Requires-Dist: matplotlib>=3.7; extra == "plot"
 | 3 | `forbidden-name` | 文件名匹配 `TcgaTargetGtex` / `expression_tcga_*` / `series_matrix` / `.soft` / `GSE*.gz|txt` / `downstream_mechanism` / `analysis_out_` / `cohorts?_curve|all.txt` | **FAIL** | **不得分发原始 TCGA/GEO 数据、大型表达矩阵或下游机制结果**（许可与体积双重风险） |
 | 4 | `size` | 单文件 > 100 MB | **FAIL** | GitHub 硬限制 |
 | 5 | `size` | 单文件 > 50 MB | WARN | 需人工确认 |
-| 6 | `absolute-path` | `.py/.md/.cff/.toml/.in/.cfg/.txt` 中某行匹配 `/home/<user>/`、`/mnt/<x>/`、`X:\\`、`projects/202608`、`rensi`（且该行不含 `http`） | **FAIL** | **不得把本机绝对路径带进发布物** —— 保证可移植性、避免泄露本机目录结构。白名单 `ALLOW_PATH_PATTERNS` 已豁免 `tools/`、`validation/inputs/`、`ASSET_MANIFEST.tsv`、`README.md` 等**溯源用途**位置 |
+| 6 | `absolute-path` | `.py/.md/.cff/.toml/.in/.cfg/.txt` 中某行匹配 `/home/<用户名>/`、`/mnt/<盘符>/`、`<盘符>:\\`、`projects/202608`、以及本机用户名（且该行不含 `http`） | **FAIL** | **不得把本机绝对路径带进发布物** —— 保证可移植性、避免泄露本机目录结构。白名单 `ALLOW_PATH_PATTERNS` 已豁免 `tools/`、`validation/inputs/`、`ASSET_MANIFEST.tsv`、`README.md` 等**溯源用途**位置 |
 | 7 | `asset-hash` | `build_assets.py --verify` 返回非 0 | **FAIL** | 冻结模型资产必须与 `ASSET_MANIFEST.tsv` 逐字节一致 |
 | 8 | `required-file` | 16 个关键文件缺失 | **FAIL** | README/LICENSE/NOTICE/CITATION/pyproject/MANIFEST.in/ASSET_MANIFEST/模型/测试等齐备 |
 | 9 | `internal-content` | 路径含 `docs/_` 或 `handoff` | WARN | 提醒内部草稿/交接材料 |
@@ -360,8 +360,13 @@ Requires-Dist: matplotlib>=3.7; extra == "plot"
 
 ```
 FAIL  absolute-path  paper_assets/audit/verify_wheel_install.py:52
-      ("python3.14", "/home/rensi/miniconda3/bin/python3"),
+      <该行内容为一个硬编码的本机 Python 解释器绝对路径>
 ```
+
+> **本文件对证据做了脱敏**：不直接复制该行原文，否则本审计报告自身就会命中
+> `absolute-path` 检查（实测确实命中过 —— 见 §6.5）。原始字符串可用
+> `python tools/release_audit.py` 复现；其内容为
+> `<家目录>/<用户名>/miniconda3/bin/python3` 形式的解释器路径。
 
 **证据链**：
 
@@ -391,6 +396,31 @@ FAIL  absolute-path  paper_assets/audit/verify_wheel_install.py:52
    >
    > **判定规则**：候选是否通过发布审计，以**候选 worktree 的审计输出**为唯一依据；
    > 开发工作树上的 FAIL 只有在能归因到候选提交时才构成候选缺陷。
+
+### 6.5 本阶段的一个自我命中及其修复（保留记录）
+
+**现象**：本文件初稿在 §6.3 中**逐字引用**了那条命中行（含真实的本机解释器绝对路径）
+作为证据，结果**本文件自身**被 `release_audit.py` 判为 `absolute-path` FAIL：
+
+```
+$ cd <clean candidate worktree> && python tools/release_audit.py
+检查项 17：FAIL 1 / WARN 0
+=== FAIL ===
+absolute-path   docs/audit/00_CANDIDATE_BASELINE.md:363   ...   FAIL
+```
+
+**判断**：这是**真实缺陷**（发布物中不得含本机绝对路径），且由本阶段引入。
+按共同规则"发现真实缺陷后直接修复"，**不**通过把 `docs/audit/` 加进
+`ALLOW_PATH_PATTERNS` 白名单来绕过（那属于"为了通过而忽略问题"）。
+
+**修复**：把证据行**脱敏**为文字描述（保留文件、行号与结论，去掉路径字面量），
+并在旁边说明原始字符串可用 `python tools/release_audit.py` 复现。
+检查本身、白名单、判定标准**均未改动**。
+
+**验证**：修复后在干净候选 worktree 重跑审计 → **FAIL 0 / WARN 0**（§7 复验记录）。
+
+**教训（供后续阶段沿用）**：在受 `absolute-path` 扫描的 `.md` 中引用此类证据时必须脱敏；
+"引用证据"不等于"可以复制机读路径"。
 
 ---
 
