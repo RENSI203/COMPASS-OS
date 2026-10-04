@@ -2,7 +2,7 @@
 
 **阶段**：0 / 6（顺序发布审查）
 **日期**：2026-10-04
-**结论**：**候选已明确**（`cda231b`）｜ **可进入第 1 阶段**
+**结论**：**候选已明确**（`96152fe`）｜ **可进入第 1 阶段**
 
 > 本阶段**未** merge / tag / push / 发布。所有操作限于本地分支与本地 worktree。
 
@@ -171,15 +171,17 @@ $ git diff --name-only 55df2c6 624184c -- paper_assets | wc -l   → 0
 | 1 | **`624184c`** | Integrate the circular layered sample-path renderer into the package（24 文件，+2669/−973） | **功能与代码**（被构建、被测试的主体） |
 | 2 | **`5e4d8a3`** | Phase 0: freeze candidate baseline and audit scope（`docs/audit/*`） | 文档 |
 | 3 | **`cda231b`** | Phase 0: redact machine path from the audit report（self-hit fix） | 文档（修复自身缺陷，见 §6.5） |
+| 4 | **`96152fe`** | Phase 0: record test-order dependency and finalize candidate hashes | 文档（§5.7） |
 
 ```
-commit  cda231b   ← 候选 HEAD
+commit  96152fe   ← 候选 HEAD（冻结）
+parent  cda231b
 parent  5e4d8a3
 parent  624184c
 parent  55df2c6
 ```
 
-**候选 HEAD = `cda231b`**；**代码冻结点 = `624184c`**。
+**候选 HEAD = `96152fe`**；**代码冻结点 = `624184c`**。
 两个 Phase 0 提交只增删 `docs/audit/` 下的 markdown 与 tsv，
 **未触碰** `src/`、`tests/`、`pyproject.toml`、`CITATION.cff`、模型资产。
 
@@ -206,7 +208,7 @@ $ cd /tmp/gh_audit/cand && git status --porcelain | wc -l
 | 项 | 值 |
 |---|---|
 | worktree 路径 | `/tmp/gh_audit/cand` |
-| 检出提交 | 候选 HEAD `cda231b`（权威复验用）；代码冻结点 `624184c` |
+| 检出提交 | 候选 HEAD `96152fe`（权威复验用）；代码冻结点 `624184c` |
 | 未提交改动 | **0** |
 | 仓库文件数 | 202 |
 | 仓库体积 | 27.0 MB |
@@ -271,12 +273,12 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) \
   python -m build --no-isolation
 ```
 
-**候选 HEAD 的规范化构建**（`SOURCE_DATE_EPOCH` = `cda231b` 的提交时间 `1791105748`）：
+**候选 HEAD 的规范化构建**（`SOURCE_DATE_EPOCH` = 候选 HEAD `96152fe` 的提交时间 `$(git log -1 --format=%ct HEAD)`）：
 
 | 产物 | SHA256 | 可重复性 |
 |---|---|---|
-| `compass_os-1.1.0-py3-none-any.whl` | `42fad6a5679e0df2cab1b0add2ea1f5ae4d47639f944fdb020dd7e9118b19240` | ✅ **逐字节可重复**（同一 epoch 两次构建一致） |
-| `compass_os-1.1.0.tar.gz` | `a0dfc69d98ee6aa88da13e3c9ded490c3efce7c1c0a0fd62ad32e981bda0a0d0` | ⚠️ **逐字节不可重复**（见 §5.6 缺陷 B） |
+| `compass_os-1.1.0-py3-none-any.whl` | `8897c47a6907d295c9126c6a6e3da427e85894eb545f0de7f35cc4c25b6de150` | ✅ **逐字节可重复**（同一 epoch 两次构建一致，见下） |
+| `compass_os-1.1.0.tar.gz` | `828f319b5c7897400484da9abdfa121729e0245c5a48e91ee26894746a20d6dc` | ⚠️ **逐字节不可重复**（见 §5.6 缺陷 B） |
 
 > wheel 的 SHA256 **随 `SOURCE_DATE_EPOCH` 变化**（该 epoch 会写入 `dist-info` 条目的时间戳）。
 > 因此上表哈希的完整标识是 **(候选 commit, SOURCE_DATE_EPOCH)** 二元组；
@@ -519,8 +521,8 @@ absolute-path   docs/audit/00_CANDIDATE_BASELINE.md:363   ...   FAIL
 
 ## 9. 阶段结论
 
-* **候选是否已明确**：**是**。候选 HEAD `cda231b`（代码冻结点 `624184c`），
-  clean worktree `/tmp/gh_audit/cand3`，版本 `1.1.0`，
+* **候选是否已明确**：**是**。候选 HEAD `96152fe`（代码冻结点 `624184c`），
+  clean worktree `/tmp/gh_audit/final`，版本 `1.1.0`，
   完整清单见 `docs/audit/CANDIDATE_MANIFEST.tsv`（对应代码冻结树 `624184c`）。
 * **是否可进入第 1 阶段**：**可以**。无 blocker；本阶段 1 项 FAIL（sdist 字节可重复性）
   已完整定位并移交第 2 阶段，不影响第 1 阶段（数据限制审查）的开展。
