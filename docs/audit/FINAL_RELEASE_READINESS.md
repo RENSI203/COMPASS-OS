@@ -66,7 +66,7 @@
 | 冻结资产 | **13 项异常 0** |
 | 六类禁止声明扫描 | **全部未出现** |
 | 审查文档机读路径守卫 | **PASS**（新增 2 项测试） |
-| wheel / sdist SHA256 | `7af6c2d7…` / `875ad23e…`（**最终**，见 §3.1） |
+| wheel / sdist SHA256 | `7af6c2d7…`（STABLE）/ sdist TREE-SPECIFIC（见 §3.1） |
 | README 复现数字独立实测 | **1.110e-16 / 2.372e-07 / 1.060e-06**（判据 1e-5）**PASS** |
 | README 覆盖度数字独立重算 | **完全吻合** |
 
@@ -92,7 +92,7 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 | 构建来源 | clean worktree `/tmp/gh_audit/rel`，检出最终候选，未提交改动 **0** |
 | **声明的发布构建 epoch** | **`1791113420`**（= 代码冻结点 `7571035` 的提交时间）—— **固定值，不由 HEAD 推导**，故后续纯文档提交**不会**改变产物哈希 |
 | `compass_os-1.1.0-py3-none-any.whl` | **`7af6c2d7f36a02b4ac6033913d1268100d97de174543b2b368290043a9cbffbc`**（15,871,951 B） |
-| `compass_os-1.1.0.tar.gz` | **`875ad23ea23b0519e93e4ba7bf78b854cf5aeb6ddfce33ed46bcfa5546fa3124`**（16,747,514 B） |
+| `compass_os-1.1.0.tar.gz` | `ca0a81d504ff13a0be5d82bc23576081a93f9a7dd9e7e537770917dfb541ef7e`（**TREE-SPECIFIC**，见下） |
 | 全新环境 | `venv --system-site-packages`，`pip install --no-deps --no-cache-dir --force-reinstall <wheel>` |
 | **源码遮蔽检查** | 实际加载路径 = `…/relenv/lib/python3.12/site-packages/compass_os/__init__.py`；`sys.path` **不含**仓库 `src/`；基础环境**无**竞争安装 |
 | ① 核心预测 | ✅ `predict(model="M2,M3")` 返回 `['M2','M3']` |
@@ -102,10 +102,17 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 | ⑤ 数值自洽 | ✅ 图中 η == 主 API；完整分解 `sum == η` |
 | 运行位置 | 仓库外（`/tmp/gh_audit/reltest`），仅依赖 wheel + 外部表达缓存 |
 
-> **哈希稳定性说明**：先用 `SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD)` 构建时，
-> 每次纯文档提交都会改变 epoch 并产生**不同**的 wheel 哈希（本轮实测复现）。
-> 因此改为**声明固定 epoch** `1791113420`（代码冻结点时间），使哈希与后续文档提交解耦；
-> 同一 epoch 连续两次构建 SHA256 **完全一致**（已实测）。
+> **哈希稳定性说明（本轮实测得出，务必照此引用）**
+>
+> 1. 最初用 `SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD)`：每次纯文档提交都会改变 epoch
+>    并产生**不同**的 wheel 哈希 —— 哈希永远无法固定（本轮实测复现）。
+> 2. 改为**声明的固定 epoch** `1791113420`（= 代码冻结点 `7571035` 的提交时间）后，
+>    **wheel 哈希与 HEAD 解耦**：在两个不同 HEAD 上重建均得到
+>    **`7af6c2d7…`**（已实测两次）。
+> 3. **sdist 无法同样固定**：`MANIFEST.in` 收录 `docs/*.md`，因此**任何文档提交都会改变
+>    sdist 内容与哈希**。故 sdist 哈希标注为 **TREE-SPECIFIC**，必须在**最终发布树**上重新测量，
+>    且其字节哈希本身也不跨构建可重复（目录 mtime）。
+>    **引用与校验一律以 wheel 的 `7af6c2d7…` 为准。**
 
 > **上述 ①–⑤ 全部针对最终 wheel**（`7af6c2d7…`）；`docs/audit/03` 与 `04` 中的端到端验证针对**源码树**，
 > 两者结论一致但对象不同。
@@ -237,8 +244,8 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 | `software_release_tag` | `v1.0.1` | **`planned (unreleased)`** —— tag **未创建**，不得当作已发布 |
 | `software_release_commit` | `7270935…` | **`4ea61a906fb3c0aa1004fb87f10674b7a7ebafff`** |
 | `software_release_date` | `2026-10-03` | **`planned (unreleased)`** |
-| `wheel_sha256` | `13c9b438…` | **`7af6c2d7f36a02b4ac6033913d1268100d97de174543b2b368290043a9cbffbc`** |
-| `sdist_sha256` | `550e04c1…` | **`875ad23ea23b0519e93e4ba7bf78b854cf5aeb6ddfce33ed46bcfa5546fa3124`** |
+| `wheel_sha256` | `13c9b438…` | **`7af6c2d7f36a02b4ac6033913d1268100d97de174543b2b368290043a9cbffbc`**（STABLE） |
+| `sdist_sha256` | `550e04c1…` | `ca0a81d504ff13a0be5d82bc23576081a93f9a7dd9e7e537770917dfb541ef7e`（**TREE-SPECIFIC**，发布前须重测） |
 | `scientific_asset_version` | `1.0.0` | **`1.0.0`（不变）** |
 
 **说明**：该文件属**论文资产**，**不在软件候选内**（`MANIFEST.in` 不收录 `paper_assets/`），
