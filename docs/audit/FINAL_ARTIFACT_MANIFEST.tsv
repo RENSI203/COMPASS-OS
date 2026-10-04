@@ -1,3 +1,18 @@
-artifact	sha256	bytes	code_freeze_commit	source_date_epoch	tree_at_measurement	stability	notes
-compass_os-1.1.0-py3-none-any.whl	7af6c2d7f36a02b4ac6033913d1268100d97de174543b2b368290043a9cbffbc	15871951	7571035aa0f9d0a999296530cfa9e3077da9ad4b	1791113420	ee36ada7843c993aaa217a15f0ff0e5f84251127	STABLE	Byte-reproducible: the same source tree plus SOURCE_DATE_EPOCH=1791113420 yields this exact wheel, and the epoch is pinned to the code-freeze commit, so documentation-only commits after it do NOT change this hash (re-verified at two different HEADs). This is the distributable artifact and the hash to cite. Verified end-to-end in a fresh venv outside the repo.
-compass_os-1.1.0.tar.gz	e1d0ada350fb0f25a2c738f80dfc569751037f772fca970d5b6a43ddca1b0db6	16747514	7571035aa0f9d0a999296530cfa9e3077da9ad4b	1791113420	17485532999dae8965bfbb4b5dee031ce1d4eed2	TREE-SPECIFIC	TREE-SPECIFIC and point-in-time BY CONSTRUCTION: MANIFEST.in packages docs/*.md, so every documentation commit changes the sdist contents and hash (observed moving three times this round). Valid only for the tree at the commit above; RE-MEASURE from the final release tree. Not byte-reproducible across builds either (setuptools stamps directory mtimes). Verify releases against the wheel hash, which is stable.
+artifact	sha256	bytes	code_freeze_commit	tree_at_measurement	source_date_epoch	stability	notes
+compass_os-1.1.0-py3-none-any.whl	ea0b8f205952497f052e7d9c35a06e2f644caf86880bd6595d27ce60f3102123	15872319	7571035aa0f9d0a999296530cfa9e3077da9ad4b	cd288985eb89f6f96ed1e49c4e47afb1356c6a51	1791113420	STABLE	Byte-reproducible: the same source tree plus SOURCE_DATE_EPOCH=1791113420 reproduces this wheel exactly (verified twice at this tree, and the epoch is pinned to the code-freeze commit so documentation-only commits do not change the hash). Declares all eight core runtime dependencies including torch, seaborn and scipy. This is the artifact to cite for verification.
+compass_os-1.1.0.tar.gz	ddd2f3ad3b7c1cfcd7e0cbaa6bb5b6253bba5ba6ed6024bf9bdeea4578ff0262	16747789	7571035aa0f9d0a999296530cfa9e3077da9ad4b	cd288985eb89f6f96ed1e49c4e47afb1356c6a51	1791113420	TREE-SPECIFIC	Point-in-time BY CONSTRUCTION: MANIFEST.in packages docs/*.md, so any documentation commit changes it. Valid only for the tree above; RE-MEASURE from the final release tree. Verified this round: 162 entries, all required model/vocab/third-party assets present, zero bytecode entries, and it builds, installs and runs (predict + sample_path + export) from the sdist.
+
+# Build requirements
+# 1. Build wheel AND sdist together: 'python -m build' (not --wheel only).
+#    test_built_artifacts_contain_runtime_assets requires both in dist/ and fails otherwise.
+# 2. Always pass SOURCE_DATE_EPOCH=1791113420 (the code-freeze commit time).
+# 3. Install with a normal 'pip install <wheel>' so dependencies resolve.
+#    A --no-deps install cannot detect an incomplete dependency declaration, which is
+#    precisely the defect found in this round (torch/seaborn were undeclared).
+
+# Release identity
+# code_freeze_commit = last commit touching src/tests/tools/pyproject/CITATION/assets: 7571035aa0f9d0a999296530cfa9e3077da9ad4b
+# release_commit     = the commit the release tag actually points to; it will DIFFER from the
+#                      code freeze because release metadata (date-released, version bumps) must be
+#                      committed before tagging. Once ANY packaged metadata changes, REBUILD and
+#                      RE-RECORD both hashes; do not reuse the values above.
