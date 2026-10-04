@@ -154,6 +154,21 @@ Runnable scripts: [`examples/quick_start.py`](examples/quick_start.py) (Level 1)
 <div align="center"><em>sample-specific computational attribution / representation-flow
 visualization — not a causal mechanism diagram, not a pathway-activation map</em></div>
 
+<p align="center">
+  <img src="docs/figures/sample_path_redesign/high/M2.png"
+       alt="COMPASS-OS sample computation path (M2, high-risk sample, GSE39582 COAD)"
+       width="100%">
+</p>
+
+<div align="center"><sub><b>Above</b> — the derived sample-level visualization, drawn by the
+shipped renderer: <code>Gene expression → COMPASS gene score → granular signature score →
+high-level concepts + clinical/PC → cohort-relative risk</code>. Circular nodes are coloured by
+each layer's own value; every link shares one width and colour and only expresses the selected
+model connectivity. Shown for one high-risk sample of the GSE39582 (COAD) cohort under
+<b>M2</b>. This is a <b>filtered computation-path view</b>, not a causal mechanism diagram and
+not a pathway-activation map. It is a static illustration; run
+<code>examples/sample_path_example.py</code> to regenerate it for your own cohort.</sub></div>
+
 ```python
 from compass_os import sample_path
 
