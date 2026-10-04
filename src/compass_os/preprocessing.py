@@ -106,7 +106,20 @@ def _to_tpm(expression: pd.DataFrame, input_scale: str) -> pd.DataFrame:
         dup = expression.index[expression.index.duplicated()].unique()[:5].tolist()
         raise InputError(f"expression 存在重复样本 ID（前几个：{dup}）")
     vals = expression.to_numpy(dtype=np.float64)
-    finite = vals[np.isfinite(vals)]
+    # ±Inf 必须显式拒绝：np.isfinite 过滤会把它们排除在负值检查之外，
+    # 从而静默流入 scaler（下游报出与输入无关的 sklearn 报错）。
+    # NaN 不同——它是**受支持的"缺失"标记**，由 missing_gene_strategy 处理，故不在此拒绝。
+    inf_mask = np.isinf(vals)
+    if inf_mask.any():
+        rows, cols = np.where(inf_mask)
+        rc = sorted({str(expression.index[i]) for i in rows})[:3]
+        cc = sorted({str(expression.columns[j]) for j in cols})[:3]
+        kinds = sorted({"+Inf" if v > 0 else "-Inf" for v in vals[inf_mask]})
+        raise InputError(
+            f"表达矩阵存在非有限值 {kinds}（共 {int(inf_mask.sum())} 处；样本如 {rc}，"
+            f"基因如 {cc}）。Inf/-Inf 不是有效表达值，请先修正为有限值；"
+            "若某基因确实缺失请用 NaN（NaN 会按 missing_gene_strategy 处理）。")
+    finite = vals
     if finite.size and finite.min() < -1e-9:
         raise InputError(
             f"表达矩阵存在负值（min={finite.min():.4g}）。TPM 不能为负；"
@@ -182,7 +195,16 @@ def cancer_codes_for(cancer_type: Iterable) -> pd.Series:
     if unknown:
         raise UnknownCancerTypeError(
             f"未知癌种 {unknown}；可用取值见 src/compass_os/data/cancer_codes.tsv（TCGA 缩写）")
-    return ct.astype(str).map(table["compass_code"]).astype(int)
+    codes = ct.astype(str).map(table["compass_code"]).astype(int)
+    # 负码值是**正常组织**标记（NORMAL = -1），不是模型支持的肿瘤类型：
+    # 直接送入 embedding 会抛 IndexError，故在此给出明确错误。
+    non_tumour = sorted(set(ct.astype(str)[codes < 0]))
+    if non_tumour:
+        raise UnknownCancerTypeError(
+            f"癌种 {non_tumour} 在 COMPASS 码表中是正常组织标记（compass_code < 0），"
+            "不是本模型支持的肿瘤类型；请改用真正的 TCGA 肿瘤缩写"
+            "（可用取值见 src/compass_os/data/cancer_codes.tsv）。")
+    return codes
 
 
 def ct_onehot_columns(cancer_type: Iterable) -> pd.DataFrame:
@@ -197,6 +219,10 @@ def ct_onehot_columns(cancer_type: Iterable) -> pd.DataFrame:
     unknown = sorted(set(ct) - set(table.index))
     if unknown:
         raise UnknownCancerTypeError(f"未知癌种 {unknown}")
+    non_tumour = sorted(set(ct[ct.map(table["compass_code"]).astype(int) < 0]))
+    if non_tumour:
+        raise UnknownCancerTypeError(
+            f"癌种 {non_tumour} 是正常组织标记（compass_code < 0），不是支持的肿瘤类型")
     X = pd.DataFrame(0.0, index=pd.RangeIndex(len(ct)), columns=ct_cols)
     ct_col = table["ct_column"]
     for i, name in enumerate(ct):

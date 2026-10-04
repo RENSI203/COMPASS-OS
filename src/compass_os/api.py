@@ -122,9 +122,14 @@ def _run(expression: pd.DataFrame, cancer_type, *, missing_gene_strategy: str,
     genes = list(feature_names())
     aligned = align_expression(expression, missing_gene_strategy, input_scale=input_scale,
                                genes=genes)
-    ct = pd.Series(list(cancer_type), index=aligned.matrix.index, name="cancer_type")
+    # 长度**必须先于**带 index 的 Series 构造校验，否则 pandas 先抛裸 ValueError
+    # （"Length of values ... does not match length of index"），掩盖真实原因。
+    ct = pd.Series(list(cancer_type), name="cancer_type")
     if len(ct) != aligned.matrix.shape[0]:
-        raise InputError(f"cancer_type 长度 {len(ct)} != 样本数 {aligned.matrix.shape[0]}")
+        raise InputError(
+            f"cancer_type 长度 {len(ct)} != 表达矩阵样本数 {aligned.matrix.shape[0]}；"
+            "必须逐样本提供癌种")
+    ct.index = aligned.matrix.index
     codes = cancer_codes_for(ct.tolist())
 
     from . import representation as _rep
