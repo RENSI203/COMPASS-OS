@@ -2,7 +2,7 @@
 
 **阶段**：0 / 6（顺序发布审查）
 **日期**：2026-10-04
-**结论**：**候选已明确**（`624184c`）｜ **可进入第 1 阶段**
+**结论**：**候选已明确**（`cda231b`）｜ **可进入第 1 阶段**
 
 > 本阶段**未** merge / tag / push / 发布。所有操作限于本地分支与本地 worktree。
 
@@ -164,14 +164,27 @@ $ git diff --name-only 55df2c6 624184c -- paper_assets | wc -l   → 0
 
 ## 3. 候选提交
 
+候选由**三个连续提交**构成（本阶段内产生，均在 `feature/sample-sankey` 上，未 merge/tag/push）：
+
+| # | commit | 内容 | 性质 |
+|---|---|---|---|
+| 1 | **`624184c`** | Integrate the circular layered sample-path renderer into the package（24 文件，+2669/−973） | **功能与代码**（被构建、被测试的主体） |
+| 2 | **`5e4d8a3`** | Phase 0: freeze candidate baseline and audit scope（`docs/audit/*`） | 文档 |
+| 3 | **`cda231b`** | Phase 0: redact machine path from the audit report（self-hit fix） | 文档（修复自身缺陷，见 §6.5） |
+
 ```
-commit  624184c161e05026cf67695ea2e7f27e343202c4
-author  RENSI203 <RENSI203@users.noreply.github.com>
-date    Sun Oct 4 17:13:27 2026 +0800
-subject Integrate the circular layered sample-path renderer into the package
-files   24 changed, 2669 insertions(+), 973 deletions(-)
+commit  cda231b   ← 候选 HEAD
+parent  5e4d8a3
+parent  624184c
 parent  55df2c6
 ```
+
+**候选 HEAD = `cda231b`**；**代码冻结点 = `624184c`**。
+两个 Phase 0 提交只增删 `docs/audit/` 下的 markdown 与 tsv，
+**未触碰** `src/`、`tests/`、`pyproject.toml`、`CITATION.cff`、模型资产。
+
+创建方式：**显式列出路径** `git add <paths>`（**未使用 `git add .` / `-A`**），
+暂存后校验 `git diff --cached --name-only | grep -E "paper_assets|validation/"` 为空，再提交。
 
 创建方式：**显式列出 24 个路径** `git add <paths>`（**未使用 `git add .` / `-A`**），
 暂存后校验 `git diff --cached --name-only | grep -E "paper_assets|validation/"` 为空，再提交。
@@ -193,7 +206,7 @@ $ cd /tmp/gh_audit/cand && git status --porcelain | wc -l
 | 项 | 值 |
 |---|---|
 | worktree 路径 | `/tmp/gh_audit/cand` |
-| 检出提交 | `624184c1`（`git rev-parse HEAD`） |
+| 检出提交 | 候选 HEAD `cda231b`（权威复验用）；代码冻结点 `624184c` |
 | 未提交改动 | **0** |
 | 仓库文件数 | 202 |
 | 仓库体积 | 27.0 MB |
@@ -258,11 +271,17 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) \
   python -m build --no-isolation
 ```
 
+**候选 HEAD 的规范化构建**（`SOURCE_DATE_EPOCH` = `cda231b` 的提交时间 `1791105748`）：
+
 | 产物 | SHA256 | 可重复性 |
 |---|---|---|
-| `compass_os-1.1.0-py3-none-any.whl` | `a26171d62f6e6b94cfca6782e371154bb45aa5ed082f2851e10e2aa4a1ffbca4` | ✅ **逐字节可重复** |
-| `compass_os-1.1.0.tar.gz` | `99d180855bc93d428d95579a88362256e1503b5aa1af213cb42781151ecffea7` | ⚠️ **逐字节不可重复**（见 §5.6） |
-| sdist **内容**哈希（解包后按 名称+内容 累计） | `6042a30bb46f94b3266ff774493063fa0e2c7ecdcf90a2fc5cf608488b1d45cd` | ✅ 可重复 |
+| `compass_os-1.1.0-py3-none-any.whl` | `42fad6a5679e0df2cab1b0add2ea1f5ae4d47639f944fdb020dd7e9118b19240` | ✅ **逐字节可重复**（同一 epoch 两次构建一致） |
+| `compass_os-1.1.0.tar.gz` | `a0dfc69d98ee6aa88da13e3c9ded490c3efce7c1c0a0fd62ad32e981bda0a0d0` | ⚠️ **逐字节不可重复**（见 §5.6 缺陷 B） |
+
+> wheel 的 SHA256 **随 `SOURCE_DATE_EPOCH` 变化**（该 epoch 会写入 `dist-info` 条目的时间戳）。
+> 因此上表哈希的完整标识是 **(候选 commit, SOURCE_DATE_EPOCH)** 二元组；
+> 复核时必须同时使用 §5.4 的命令与提交时间戳，否则会得到不同的（同样正确的）哈希。
+> **若 `SOURCE_DATE_EPOCH` 不固定，即使源码完全相同，wheel 哈希也不可复现**（缺陷 A）。
 
 wheel METADATA（节选）：
 
@@ -326,6 +345,36 @@ Requires-Dist: matplotlib>=3.7; extra == "plot"
   ① 用 content-sha256 作为 sdist 的溯源依据，② 在发布说明中标注 sdist 字节哈希的**构建特定性**。
 * **状态**：**未修复，转第 2 阶段（依赖项与安装审查）**评估是否需要 pin 构建后端或改用其他打包器。
   本阶段只记录，不擅自更换打包工具。
+
+### 5.7 ⚠️ 本轮新发现的真实缺陷：测试套件对构建产物存在顺序依赖
+
+**现象**：`dist/` 不存在时，测试结果为 **PASS 131 / FAIL 0 / SKIP 1**；
+`dist/` 存在时为 **PASS 132 / FAIL 0 / SKIP 0**。
+
+**定位**：`tests/test_packaging.py::test_built_artifacts_contain_runtime_assets`
+
+```python
+@pytest.mark.skipif(not (repo_root() / "dist").is_dir(),
+                    reason="需要先 python -m build（dist/ 不存在）")
+```
+
+**该测试检查的内容**（v1.0.1 的核心 packaging 断言）：
+已构建的 wheel / sdist 必须包含**全部 runtime 资产**且不含字节码 —— 仅"build 成功"不算通过。
+**因此被跳过的恰恰是发布审计最不能跳过的那一项。**
+
+**评估**：跳过条件本身**合理且显式**（没有构建产物就无从检查构建产物），
+**不是**缺陷；但它构成**流程风险**：
+
+> 若在 `python -m build` **之前**跑测试，汇总行会显示 `PASS 131 / SKIP 1`，
+> 容易被误读为"测试全过"，从而漏掉资产打包回归。
+
+**处置**：不修改该测试（其条件正确）。改为在发布流程中固化**顺序要求**：
+
+> **发布验证顺序：先 `python -m build`，再 `python tests/run_tests.py`。**
+> 判定基线为 **PASS 132 / FAIL 0 / SKIP 0**。
+> 若出现 SKIP，必须确认是 `dist/` 缺失所致，而**不能**直接接受。
+
+**验证**：候选 HEAD 在 `dist/` 存在时 → **PASS 132 / FAIL 0 / SKIP 0**（§7 复验记录）。
 
 ---
 
@@ -440,6 +489,8 @@ absolute-path   docs/audit/00_CANDIDATE_BASELINE.md:363   ...   FAIL
 | 渲染层自检 | **PASS** | **12 / 12 OK** |
 | wheel 可重复构建 | **PASS** | §5.6 缺陷 A 修复后验证一致 |
 | sdist 字节可重复构建 | **FAIL** | §5.6 缺陷 B，已定位、未修复，转第 2 阶段 |
+| 测试顺序依赖已识别并固化 | **PASS** | §5.7（缺陷性质为流程风险，已给出处置） |
+| 发布报告自身不含本机绝对路径 | **PASS** | §6.5（自我命中已修复并复验） |
 | 候选 wheel 在全新环境安装并跑通 | **NOT VERIFIED**（本阶段） | 上一轮做过，但用的是 `55df2c6`+13 未提交文件、版本 `1.2.0`，**与本候选不可比**；将在**第 2 阶段**对 `a26171d6…` 重做 |
 | 数据限制审查 | **NOT VERIFIED** | 第 1 阶段 |
 | 依赖项与安装审查 | **NOT VERIFIED** | 第 2 阶段 |
@@ -457,6 +508,7 @@ absolute-path   docs/audit/00_CANDIDATE_BASELINE.md:363   ...   FAIL
 | # | 事项 | 移交 |
 |---|---|---|
 | 1 | sdist 字节不可重复（缺陷 B） | 第 2 阶段：评估 pin 构建后端 / 改用其他打包器 / 正式接受并改用 content-sha256 |
+| 1b | 发布验证顺序（先 build 后 test）需写入发布流程 | 第 2 阶段：与依赖/安装审查一并固化 |
 | 2 | 候选 wheel 需在**全新环境**重新验证（`a26171d6…`） | 第 2 阶段 |
 | 3 | `paper_assets/audit/verify_wheel_install.py:52` 的硬编码解释器 | **不属本候选**；已定位并建议负责人改用 `sys.executable`，本轮无权修改该工作区 |
 | 4 | `docs/SAMPLE_PATH_VISUAL_REVIEW.md` 描述的 v1.1.x 旧渲染器已退役 | 第 5 阶段：确认历史文档不会与最终结论冲突（当前已在 `SAMPLE_PATH_INTEGRATION_VALIDATION.md` §9 标注） |
@@ -467,8 +519,9 @@ absolute-path   docs/audit/00_CANDIDATE_BASELINE.md:363   ...   FAIL
 
 ## 9. 阶段结论
 
-* **候选是否已明确**：**是**。候选提交 `624184c`，clean worktree `/tmp/gh_audit/cand`，
-  版本 `1.1.0`，完整清单见 `docs/audit/CANDIDATE_MANIFEST.tsv`。
+* **候选是否已明确**：**是**。候选 HEAD `cda231b`（代码冻结点 `624184c`），
+  clean worktree `/tmp/gh_audit/cand3`，版本 `1.1.0`，
+  完整清单见 `docs/audit/CANDIDATE_MANIFEST.tsv`（对应代码冻结树 `624184c`）。
 * **是否可进入第 1 阶段**：**可以**。无 blocker；本阶段 1 项 FAIL（sdist 字节可重复性）
   已完整定位并移交第 2 阶段，不影响第 1 阶段（数据限制审查）的开展。
 * 本阶段**未** merge、**未** tag、**未** push、**未** 发布；
