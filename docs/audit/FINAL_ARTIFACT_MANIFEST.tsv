@@ -1,19 +1,18 @@
-artifact	sha256	bytes	code_freeze_commit	tree_at_measurement	source_date_epoch	stability	notes
-compass_os-1.1.0-py3-none-any.whl	27fa69d6603784eb5d00c145257b01e851d0c17ebacef401df2f2f57200df9ba	15872442	091a9938f61c46fa2659bf9b8652c71475d5ac5c	091a9938f61c46fa2659bf9b8652c71475d5ac5c	1791113420	REPRODUCIBLE PER TREE	FINAL RELEASE ARTIFACT. Built from the frozen release tree above with SOURCE_DATE_EPOCH=1791113420; two consecutive builds gave an identical SHA256. This exact wheel was installed into a pristine venv with NORMAL 'pip install' (no --no-deps, no system-site-packages, no pre-installed dependencies) and passed all five acceptance checks: core prediction, get_representation, analyze+save_report with PNG/PDF, sample_path with PNG/PDF/SVG/HTML export, and eta/decomposition self-consistency. Changes if README.md or pyproject.toml changes (METADATA embeds the README).
-compass_os-1.1.0.tar.gz	bc407036b6c6d7a8b03c8047a721b89d26b6d847fdb8c0da0545cd4e3f22f0ee	16748941	091a9938f61c46fa2659bf9b8652c71475d5ac5c	091a9938f61c46fa2659bf9b8652c71475d5ac5c	1791113420	TREE-SPECIFIC	FINAL RELEASE SDIST. 163 entries, all model/vocabulary/third-party assets present, zero bytecode, release notes included. Accepted this round: it builds, installs and runs (predict + sample_path + export) from the sdist. Contains docs/*.md so any documentation commit changes its hash; re-measure from the release tree if anything is committed after this point.
+artifact	sha256	bytes	commit_built_from	source_date_epoch	verification_method	content_digest	notes
+compass_os-1.1.0-py3-none-any.whl	27fa69d6603784eb5d00c145257b01e851d0c17ebacef401df2f2f57200df9ba	15872618	656b2e98e34845576ccee826a4c65915c67243d1	1791113420	byte SHA256	n/a	FINAL RELEASE ARTIFACT. Byte-identical across two independent worktrees at this commit, so the SHA256 is a valid verification target. This exact wheel was installed with a NORMAL pip install into a pristine venv - no --no-deps, no --system-site-packages, no pre-installed dependencies - which resolved and installed all 18 declared dependencies (matplotlib correctly bounded to 3.8.4) and passed all five acceptance checks: core prediction, get_representation, analyze with PNG/PDF reporting, sample_path with PNG/PDF/SVG/HTML export, and eta/decomposition self-consistency.
+compass_os-1.1.0.tar.gz	e7637b80a2bc464303fa5abf6a9fb2aa0a2621aac62b6c5a631bc74f03c7bd47	16758798	656b2e98e34845576ccee826a4c65915c67243d1	1791113420	content digest	b5b0574ae6ac7074c5d2747b04360f9db676bb17fffc98afc5551848cb706393	FINAL RELEASE SDIST. The byte SHA256 here is ONE build instance and MUST NOT be used for verification: setuptools stamps directory mtimes, so two builds of the same tree differ (measured). Verify with the content digest instead - the sha256 over the sorted list of member paths and their file hashes - which was identical across two independent builds. 138 files, all model/vocabulary/third-party assets present, zero bytecode, release notes included. Accepted: builds, installs and runs (predict + sample_path + export) from the sdist.
 
-# ==== BUILD REQUIREMENTS (all three were learned from failures this round) ====
-# 1. Build BOTH artifacts: 'python -m build'. --wheel only makes
-#    test_built_artifacts_contain_runtime_assets FAIL (it needs both in dist/).
+# ==== BUILD REQUIREMENTS (each learned from a failure this round) ====
+# 1. Build BOTH artifacts with 'python -m build'. --wheel only makes
+#    test_built_artifacts_contain_runtime_assets FAIL (it requires both in dist/).
 # 2. Always pass SOURCE_DATE_EPOCH=1791113420 (the code-freeze commit time).
-# 3. Install with a NORMAL 'pip install <wheel>'. --no-deps cannot detect an
-#    incomplete dependency declaration - which is exactly what happened here: the
+# 3. Install with a NORMAL 'pip install <wheel>'. A --no-deps install cannot detect an
+#    incomplete dependency declaration, which is exactly the defect found here: the
 #    package installed cleanly and then failed at the first predict().
 
 # ==== RELEASE IDENTITY ====
-# code_freeze_commit = 091a9938f61c46fa2659bf9b8652c71475d5ac5c
-# release_commit     = the commit the release tag points to. If the tag is created on this
-#                      commit, the two coincide. If ANY packaged file changes afterwards
-#                      (including CITATION.cff date-released, README.md, pyproject.toml or
-#                      MANIFEST.in), both hashes above become INVALID: rebuild, re-run the
-#                      isolated install and the acceptance checks, then re-record.
+# frozen release tree = 656b2e98e34845576ccee826a4c65915c67243d1
+# The release tag should point at this commit. If ANY packaged file changes afterwards
+# (src/**, tests/**, README.md, pyproject.toml, MANIFEST.in, CITATION.cff, docs/**.md,
+# RELEASE_NOTES_v1.1.0.md), BOTH artifacts are invalidated: rebuild, re-run the isolated
+# install and the acceptance checks, then re-record both digests above.
