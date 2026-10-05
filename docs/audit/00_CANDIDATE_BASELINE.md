@@ -356,7 +356,9 @@ Requires-Dist: matplotlib>=3.7; extra == "plot"
   差异仅出现在 **31 个条目的 mtime**，且全部是**目录**条目与构建时重新生成的文件
   （`PKG-INFO`、`setup.cfg`、`*.egg-info/*`）—— setuptools 对这些条目使用**构建时刻**，
   不遵循 `SOURCE_DATE_EPOCH`。
-* **影响**：sdist 的**字节**哈希不可复现；但**内容**可复现（可用 §5.4 的 content-sha256 校验）。
+* **影响**：同一源码树重复构建时，sdist 的**字节**哈希会变化（setuptools 记录目录 mtime）。
+  这**不影响发布校验**：发布时对**实际上传的那一份**记录并公布完整 SHA256，下载后逐字节比对即可；
+  §5.4 的 content-sha256 作为**内容一致性**的附加证据。两者性质不同，不可混为一谈。
   wheel 不受影响（已可重复），而 wheel 才是 `pip install` 实际使用的产物。
 * **修复方案**：属 setuptools 行为，无干净的应用层修法；候选做法是
   ① 用 content-sha256 作为 sdist 的溯源依据，② 在发布说明中标注 sdist 字节哈希的**构建特定性**。
