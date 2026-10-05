@@ -51,6 +51,10 @@ dependencies = [
   "plotly>=5.18",
   "gdown>=5.0",
   "umap-learn>=0.5",
+  # openpyxl 是 pandas.read_excel 的引擎；vendored 的
+  # compass/tokenizer/__init__.py 在**模块级**读取 concept_colors.xlsx，
+  # 因此 `import compass` 即需要它（第十个关键路径依赖）。
+  "openpyxl>=3.1",
 ]
 
 [project.optional-dependencies]
