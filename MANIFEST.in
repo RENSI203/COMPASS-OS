@@ -9,3 +9,6 @@ recursive-include examples *.py
 
 # 字节码绝不进入 sdist / wheel（vendored 包导入时会生成）
 global-exclude __pycache__ *.py[cod]
+
+# 发布说明（v1.1.0）：使 sdist 自描述其发布内容
+include RELEASE_NOTES_v1.1.0.md
