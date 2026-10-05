@@ -12,7 +12,8 @@
 | 项 | 值 |
 |---|---|
 | 分支 | `feature/sample-sankey`（**未** merge / tag / push） |
-| 最终候选提交 | **`b591b4c`**（本文件所在提交；源/产物 manifest 与论文元数据已同步）；代码冻结点链见 §2 |
+| **最终发布树（冻结）** | **`091a993`** —— 依赖声明、README、发布日期全部确定后冻结；wheel 与 sdist 均在此树上构建并验收 |
+| **release_commit 政策** | tag 应指向**该冻结树的提交**。若之后任何打包文件变更（`CITATION.cff` / `README.md` / `pyproject.toml` / `MANIFEST.in`），**两种哈希即刻失效**，须重建并重跑隔离安装与验收 |
 | 软件版本 | **1.1.0**（`pyproject.toml` / `__init__.py` / `CITATION.cff` / README 徽标四处一致） |
 | 科学资产版本 | **1.0.0**（`qc_config.json`，与软件版本独立，**未误 bump**） |
 | 源码清单 | `docs/audit/FINAL_CANDIDATE_MANIFEST.tsv`（213 文件，path/size/sha256） |
@@ -87,7 +88,31 @@
 SOURCE_DATE_EPOCH=$(git log -1 --format=%ct HEAD) python -m build --no-isolation
 ```
 
-### 3.0 依赖安装验证（本轮发现的**发布级缺陷**）
+### 3.0 依赖安装验证（本轮发现的**发布级缺陷**，共三波）
+
+> **最终结论：真隔离环境下的普通 `pip install` 已通过，19 个依赖由 pip 自动解析安装，五项端到端验收全部通过。**
+
+| 波次 | 缺失/错误的依赖 | 症状 |
+|---|---|---|
+| 1 | `torch`、`seaborn`（`scipy` 仅靠传递依赖） | `pip install` "成功"，首次 `predict()` 即 `ModuleNotFoundError: seaborn` |
+| 2 | `tqdm`、`wandb`、`joblib`、`torchvision`、`einops`、`packaging`、`plotly`、`gdown`、`umap-learn` | 同上，逐层暴露（vendored `import compass` 的模块级导入链） |
+| 3 | `openpyxl` | vendored `tokenizer/__init__.py` 模块级 `pd.read_excel` |
+| **上限缺失** | **`matplotlib` 需 `<3.9`** | 仅设下界时 pip 装入 3.11.2，`from matplotlib.cm import get_cmap` **ImportError**（该 API 于 3.7 弃用、3.9 移除） |
+
+**最终验证（env6，真隔离：无 `--no-deps`、无 `--system-site-packages`、无预填）**
+
+| 项 | 结果 |
+|---|---|
+| pip 解析安装 | **19/19 模块**（18 个声明依赖 + 包自身），`matplotlib` 正确解析为 **3.8.4** |
+| 加载路径 | `…/env6/lib/python3.12/site-packages/compass_os/__init__.py`；**无源码遮蔽** |
+| ① 核心预测 | ✅ `predict(model="M2,M3")` → `(40, 2)` |
+| ② 表征 | ✅ `(40, 132)` / `(40, 43)` |
+| ③ `analyze` + `save_report` | ✅ 13 个文件，含 PNG 与 PDF |
+| ④ `sample_path` + 导出 | ✅ PNG/PDF/SVG/HTML；**HTML 内嵌 == PNG 字节** |
+| ⑤ 数值自洽 | ✅ 图中 η == 主 API；完整分解 `sum == η` |
+| 带宽处置 | 按允许，用**本地 wheel 缓存**（torch/torchvision CPU 版）避免 554 MB 下载；pip 仍走**正常解析安装** |
+
+### 3.0b 原始依赖验证记录（供对照）
 
 | 步骤 | 结果 |
 |---|---|

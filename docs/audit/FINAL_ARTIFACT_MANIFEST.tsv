@@ -1,20 +1,19 @@
 artifact	sha256	bytes	code_freeze_commit	tree_at_measurement	source_date_epoch	stability	notes
-compass_os-1.1.0-py3-none-any.whl	6cde3bc3a71f529c63e0bb2b002a3989d71aa12886c0203322e1ea1bb08692c8	15872405	44cc0049f1e6f85d3cee2d84cae6707cdd2bb6ad	b745ea6f2077fbc4ca39eed0360e8e05ec7c3cb2	1791113420	TREE-SPECIFIC (reproducible per tree)	Reproducible for a GIVEN tree: same tree + SOURCE_DATE_EPOCH=1791113420 reproduces this wheel byte-identically. PRECISE STABILITY RULE (measured this round): commits touching ONLY docs/** leave the wheel unchanged, but commits touching README.md or pyproject.toml DO change it, because METADATA embeds the README long description. The epoch is pinned to the code-freeze commit so build time is not a variable. Re-measure from the final release tree and cite that value.
-compass_os-1.1.0.tar.gz	2f9d6bac4b0d37085244e02c20dd7ddc5bddbfb127422b56cdeb9d8a17987283	16753473	44cc0049f1e6f85d3cee2d84cae6707cdd2bb6ad	b745ea6f2077fbc4ca39eed0360e8e05ec7c3cb2	1791113420	TREE-SPECIFIC (point-in-time)	MANIFEST.in packages docs/*.md, so ANY documentation commit changes it. Valid only for the tree above; RE-MEASURE at release. Accepted this round: 162 entries, all assets present, no bytecode, builds + installs + runs from the sdist. Not byte-reproducible across builds (setuptools stamps directory mtimes).
+compass_os-1.1.0-py3-none-any.whl	27fa69d6603784eb5d00c145257b01e851d0c17ebacef401df2f2f57200df9ba	15872442	091a9938f61c46fa2659bf9b8652c71475d5ac5c	091a9938f61c46fa2659bf9b8652c71475d5ac5c	1791113420	REPRODUCIBLE PER TREE	FINAL RELEASE ARTIFACT. Built from the frozen release tree above with SOURCE_DATE_EPOCH=1791113420; two consecutive builds gave an identical SHA256. This exact wheel was installed into a pristine venv with NORMAL 'pip install' (no --no-deps, no system-site-packages, no pre-installed dependencies) and passed all five acceptance checks: core prediction, get_representation, analyze+save_report with PNG/PDF, sample_path with PNG/PDF/SVG/HTML export, and eta/decomposition self-consistency. Changes if README.md or pyproject.toml changes (METADATA embeds the README).
+compass_os-1.1.0.tar.gz	bc407036b6c6d7a8b03c8047a721b89d26b6d847fdb8c0da0545cd4e3f22f0ee	16748941	091a9938f61c46fa2659bf9b8652c71475d5ac5c	091a9938f61c46fa2659bf9b8652c71475d5ac5c	1791113420	TREE-SPECIFIC	FINAL RELEASE SDIST. 163 entries, all model/vocabulary/third-party assets present, zero bytecode, release notes included. Accepted this round: it builds, installs and runs (predict + sample_path + export) from the sdist. Contains docs/*.md so any documentation commit changes its hash; re-measure from the release tree if anything is committed after this point.
 
-# Build requirements
-# 1. 'python -m build' (BOTH artifacts). --wheel only makes
-#    test_built_artifacts_contain_runtime_assets FAIL because it requires both in dist/.
-# 2. Always pass SOURCE_DATE_EPOCH=1791113420 (code-freeze commit time).
-# 3. Install with a normal 'pip install <wheel>' so dependencies resolve. A --no-deps
-#    install cannot detect an incomplete dependency declaration - exactly the defect found
-#    in this round, where torch and seaborn were undeclared and predict() raised
-#    ModuleNotFoundError on a normal install.
+# ==== BUILD REQUIREMENTS (all three were learned from failures this round) ====
+# 1. Build BOTH artifacts: 'python -m build'. --wheel only makes
+#    test_built_artifacts_contain_runtime_assets FAIL (it needs both in dist/).
+# 2. Always pass SOURCE_DATE_EPOCH=1791113420 (the code-freeze commit time).
+# 3. Install with a NORMAL 'pip install <wheel>'. --no-deps cannot detect an
+#    incomplete dependency declaration - which is exactly what happened here: the
+#    package installed cleanly and then failed at the first predict().
 
-# Release identity
-# code_freeze_commit = last commit touching src/tests/tools/pyproject/CITATION/assets: 44cc0049f1e6f85d3cee2d84cae6707cdd2bb6ad
-# release_commit     = the commit the release tag points to. It WILL DIFFER, because release
-#                      metadata (CITATION date-released) must be committed before tagging, and
-#                      that commit changes README/pyproject-adjacent metadata. BOTH hashes above
-#                      are therefore invalidated by any further packaged change: rebuild and
-#                      re-record before tagging, and never reuse the values above.
+# ==== RELEASE IDENTITY ====
+# code_freeze_commit = 091a9938f61c46fa2659bf9b8652c71475d5ac5c
+# release_commit     = the commit the release tag points to. If the tag is created on this
+#                      commit, the two coincide. If ANY packaged file changes afterwards
+#                      (including CITATION.cff date-released, README.md, pyproject.toml or
+#                      MANIFEST.in), both hashes above become INVALID: rebuild, re-run the
+#                      isolated install and the acceptance checks, then re-record.
