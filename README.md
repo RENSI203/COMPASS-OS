@@ -623,7 +623,7 @@ optional **developer override** (point it at a directory containing `models/`, a
 `assets/` directory, or at `src/compass_os`).
 
 Requires Python ≥ 3.10 and, installed automatically: PyTorch, torchvision, pandas, numpy,
-scipy, scikit-learn, scikit-survival, matplotlib, seaborn, tqdm, wandb, joblib, einops,
+scipy, scikit-learn, scikit-survival, matplotlib (<3.9), seaborn, tqdm, wandb, joblib, einops,
 packaging, plotly, gdown, umap-learn and openpyxl. **PyTorch is a core runtime dependency**, not an
 extra: the frozen COMPASS forward pass needs it. The remaining packages are required because
 `import compass` (the vendored upstream package) imports its encoder and utility modules at

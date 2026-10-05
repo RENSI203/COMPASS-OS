@@ -24,7 +24,10 @@ dependencies = [
   "scipy>=1.11",
   "scikit-learn>=1.3",
   "scikit-survival>=0.22",
-  "matplotlib>=3.7",
+  # 上限必要：vendored 的 compass/utils/crmap.py:447 使用
+  # `from matplotlib.cm import get_cmap`，该 API 在 matplotlib 3.7 弃用、**3.9 已移除**。
+  # 若不设上限，pip 会装入 3.11.x 并导致 `import compass` 直接 ImportError。
+  "matplotlib>=3.7,<3.9",
   # torch 是**核心**运行依赖：冻结 COMPASS 前向传播需要它（representation.py）。
   # README「Requires ... PyTorch」即此意；此前未声明会导致
   # `pip install compass-os` "成功"但 predict() 立即 ModuleNotFoundError。
@@ -64,7 +67,7 @@ test = ["pytest>=7"]
 # sample_path 的渲染层不引入任何**新增**硬依赖：PNG/PDF/SVG/HTML 全部由同一个
 # Matplotlib Figure 导出，HTML 内嵌同一份 PNG 字节 —— 不再需要 Plotly / Kaleido / CDN。
 # 该 extra 供 `pip install --no-deps` 等最小安装场景显式补齐绘图依赖使用。
-plot = ["matplotlib>=3.7"]
+plot = ["matplotlib>=3.7,<3.9"]
 
 [project.urls]
 Documentation = "https://github.com/RENSI203/COMPASS-OS#readme"
