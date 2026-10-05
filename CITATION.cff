@@ -11,9 +11,10 @@ abstract: >-
   training, re-fitting or tuning happens at prediction time.
 type: software
 version: 1.1.0
-# 发布时须改为**实际**发布日期（当前为候选冻结日期）；
-# v1.0.1 的日期 2026-10-03 已随版本号变更而失效。
-date-released: "2026-10-04"
+# 最终发布树冻结日期。若 tag 在实际不同的日期创建，
+# 此单行必须同步修改 —— 而**任何打包元数据变更都会使下方 wheel/sdist 哈希失效**，
+# 届时必须重建两种产物并重新记录（见 docs/audit/FINAL_ARTIFACT_MANIFEST.tsv）。
+date-released: "2026-10-05"
 license: MIT
 repository-code: "https://github.com/RENSI203/COMPASS-OS"
 authors:
